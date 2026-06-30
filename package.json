@@ -1,0 +1,18 @@
+{
+  "name": "teengine",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Simple 2D TypeScript game engine powered by WebGPU",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@webgpu/types": "^0.1.60",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  }
+}
