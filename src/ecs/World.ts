@@ -1,4 +1,5 @@
 import type { Graphics } from "../graphics/Graphics.js";
+import type { PhysicsWorld } from "../physics/PhysicsWorld.js";
 import { createEntity, type Entity, type EntityId, type SpawnConfig } from "./Entity.js";
 
 type LayerRenderables = {
@@ -10,10 +11,17 @@ export class World {
   private readonly entities = new Map<EntityId, Entity>();
   private nextId: EntityId = 1;
   private time = 0;
+  private physics: PhysicsWorld | null = null;
 
   spawn(config: SpawnConfig): EntityId {
     const id = this.nextId++;
-    this.entities.set(id, createEntity(id, config));
+    const entity = createEntity(id, config);
+    this.entities.set(id, entity);
+
+    if (this.physics && entity.rigidBody) {
+      entity.rigidBody.handle = this.physics.createBodyForEntity(entity);
+    }
+
     return id;
   }
 
@@ -22,7 +30,40 @@ export class World {
   }
 
   remove(id: EntityId): void {
+    const entity = this.entities.get(id);
+    if (entity?.rigidBody?.handle !== undefined && this.physics) {
+      this.physics.removeBody(entity.rigidBody.handle);
+    }
     this.entities.delete(id);
+  }
+
+  /** Attach physics and create bodies for existing entities with rigidBody. */
+  attachPhysics(physics: PhysicsWorld): void {
+    this.physics = physics;
+    for (const entity of this.entities.values()) {
+      if (entity.rigidBody && entity.rigidBody.handle === undefined) {
+        entity.rigidBody.handle = physics.createBodyForEntity(entity);
+      }
+    }
+  }
+
+  /** Copy Rapier transforms into entity transforms after physics step. */
+  syncFromPhysics(): void {
+    if (!this.physics) return;
+
+    for (const entity of this.entities.values()) {
+      const handle = entity.rigidBody?.handle;
+      if (handle === undefined) continue;
+
+      const t = this.physics.getTransform(handle);
+      entity.transform.x = t.x;
+      entity.transform.y = t.y;
+      entity.transform.rotation = t.rotation;
+    }
+  }
+
+  get physicsWorld(): PhysicsWorld | null {
+    return this.physics;
   }
 
   update(fixedDt: number): void {

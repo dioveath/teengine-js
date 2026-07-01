@@ -7,68 +7,67 @@ TeEngine is a **simple 2D TypeScript game engine** with **WebGPU** rendering.
 ```
 Game code (main.ts)
     ↓
-World                 entities, fixed update, render → Graphics
+World                 entities, fixed update, physics sync, render
     ↓
-Engine                fixed timestep (1/60s) + render loop
+Engine                fixed timestep (1/60s) + input + render loop
     ↓
-Graphics API          cameras, layers, drawSprite, debug draws
+Graphics API          cameras, layers, drawSprite, shapes
     ↓
 DrawQueue             collects commands per frame
     ↓
 FrameRenderer         sorts per layer, submits GPU passes
     ├── SpriteBatcher  textured quads (primary)
-    └── DebugBatcher   lines/rects (debug)
+    └── ShapeBatcher colored rects/circles/lines
     ↓
 WebGPUContext
+
+PhysicsWorld (Rapier 2D) ←→ World.syncFromPhysics()
 ```
 
 ## Game loop
 
 ```ts
+const physics = await PhysicsWorld.create({ gravityY: 980 });
+world.attachPhysics(physics);
+
 engine.setLoop({
-  fixedUpdate: ({ dt, tick, time }) => {
-    world.update(dt); // always 1/60s
+  fixedUpdate: ({ dt, input }) => {
+    physics.step(dt);
+    world.syncFromPhysics();
+    world.update(dt);
   },
-  render: ({ graphics, alpha, width, height }) => {
+  render: ({ graphics }) => {
     world.render(graphics);
     graphics.endFrame();
   },
 });
 ```
 
-Simulation runs at a fixed **60 Hz** with spiral-of-death protection (`maxFrameSteps = 5`). Rendering runs every frame; `alpha` is available for interpolation later.
-
-## Graphics API
+## Input
 
 ```ts
-graphics.registerLayer("world", { camera: worldCam, sort: "y" });
-graphics.registerLayer("ui", { camera: uiCam, sort: "z" });
+engine.input.bindAction("move_left", ["ArrowLeft", "KeyA"]);
 
-graphics.beginFrame(clearColor);
-graphics.beginLayer("world");
-graphics.drawSprite(atlas.player, { x, y, rotation });
-graphics.endLayer();
-graphics.endFrame();
+fixedUpdate: ({ input }) => {
+  const dx = input.actionAxis("move_left", "move_right");
+  if (input.actionPressed("jump")) { /* ... */ }
+};
 ```
 
-### Conventions (agreed defaults)
+## Physics
 
-| Topic | Choice |
-|-------|--------|
-| World coords | Y-down, top-left style |
-| Camera anchor | `(x,y)` = world point at viewport center |
-| Resolution | Dynamic — canvas fills window |
-| Atlas v1 | Manual `AtlasRegion` + demo atlas; JSON loader later |
-| Layers | Must `registerLayer()` at startup |
-| World sort | Y-sort (higher y draws on top) |
+Entities optionally include `rigidBody`. Rapier runs in **Y-up**; `src/physics/coords.ts` converts at the boundary. TeEngine world remains **Y-down**.
 
-## Development
-
-```bash
-npm install
-npm run dev
-npm run typecheck
-npm run build
+```ts
+world.spawn({
+  transform: { x: 400, y: 280 },
+  sprite: { region: atlas.player, layer: "world" },
+  rigidBody: {
+    type: "dynamic",
+    collider: { kind: "box", width: 28, height: 28 },
+    lockRotation: true,
+  },
+});
 ```
 
 ## Directory layout
@@ -77,22 +76,21 @@ npm run build
 src/
   engine/       Fixed timestep game loop
   ecs/          World, Entity, Transform
+  input/        Input, ActionMap
+  physics/      PhysicsWorld, coord conversion
   graphics/     Graphics, Camera2D, DrawQueue, LayerRegistry
-  gpu/          WebGPU, SpriteBatcher, DebugBatcher, FrameRenderer
-  assets/       Atlas types, texture loading, demo atlas
+  gpu/          WebGPU, batchers, FrameRenderer, uniforms
+  assets/       Atlas types, demo atlas
   math/         Color, Mat3
-docs/
-  ARCHITECTURE.md
-  PHYSICS.md
-legacy/         Original Canvas 2D prototype
 ```
 
 ## Roadmap
 
-- [x] WebGPU swapchain
-- [x] Camera2D + layers + draw queue
-- [x] Textured sprite batching
+- [x] WebGPU + cameras + layers + sprites
 - [x] Entity system + fixed timestep
-- [x] Input system (actions, keyboard, mouse world/screen)
-- [ ] JSON atlas loader (TexturePacker / Aseprite)
-- [ ] Rapier 2D physics
+- [x] Input system
+- [x] Shape primitives
+- [x] Rapier 2D physics
+- [ ] JSON atlas loader
+- [ ] Collision events / sensors
+- [ ] Kinematic character controller

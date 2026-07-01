@@ -2,7 +2,7 @@ import type { AtlasRegion } from "../assets/Atlas.js";
 import type { Color } from "../math/index.js";
 import { FrameRenderer } from "../gpu/FrameRenderer.js";
 import { WebGPUContext } from "../gpu/WebGPUContext.js";
-import { Camera2D, createUiCamera } from "./Camera2D.js";
+import { Camera2D } from "./Camera2D.js";
 import {
   DrawQueue,
   resolveDrawOptions,
@@ -25,20 +25,16 @@ export class Graphics {
   private readonly layers: LayerRegistry;
   private readonly queue = new DrawQueue();
   private currentLayer: string | null = null;
-  private uiCamera: Camera2D;
 
-  private constructor(frameRenderer: FrameRenderer, layers: LayerRegistry, uiCamera: Camera2D) {
+  private constructor(frameRenderer: FrameRenderer, layers: LayerRegistry) {
     this.frameRenderer = frameRenderer;
     this.layers = layers;
-    this.uiCamera = uiCamera;
   }
 
   static async create(gpu: WebGPUContext): Promise<Graphics> {
     const frameRenderer = await FrameRenderer.create(gpu);
     const layers = new LayerRegistry();
-    const { width, height } = frameRenderer.viewport;
-    const uiCamera = createUiCamera(width, height);
-    return new Graphics(frameRenderer, layers, uiCamera);
+    return new Graphics(frameRenderer, layers);
   }
 
   registerLayer(name: string, options: RegisterLayerOptions): void {
@@ -50,8 +46,6 @@ export class Graphics {
 
   resize(width: number, height: number): void {
     this.frameRenderer.resize(width, height);
-    this.uiCamera.x = width * 0.5;
-    this.uiCamera.y = height * 0.5;
   }
 
   beginFrame(clearColor: Color): void {
@@ -154,23 +148,6 @@ export class Graphics {
     });
   }
 
-  /** @deprecated Use drawRect() */
-  drawDebugRect(x: number, y: number, width: number, height: number, color: Color): void {
-    this.drawRect(x, y, width, height, color);
-  }
-
-  /** @deprecated Use drawLine() */
-  drawDebugLine(
-    x0: number,
-    y0: number,
-    x1: number,
-    y1: number,
-    width: number,
-    color: Color,
-  ): void {
-    this.drawLine(x0, y0, x1, y1, width, color);
-  }
-
   endFrame(): void {
     const grouped = this.queue.byLayer(this.layers.drawOrder);
     this.frameRenderer.endFrame(
@@ -182,10 +159,6 @@ export class Graphics {
 
   get viewport(): { width: number; height: number } {
     return this.frameRenderer.viewport;
-  }
-
-  getUiCamera(): Camera2D {
-    return this.uiCamera;
   }
 
   private requireLayer(caller: string): string {

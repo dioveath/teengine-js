@@ -5,7 +5,8 @@ import type {
   ShapeRectCommand,
 } from "../graphics/DrawQueue.js";
 import { WebGPUContext } from "./WebGPUContext.js";
-import { createShapePipeline, writeMat3Uniform, type ShapePipeline } from "./shapeShaders.js";
+import { createShapePipeline, type ShapePipeline } from "./shapeShaders.js";
+import { writeMat3Uniform } from "./uniforms.js";
 
 const MAX_VERTICES = 65_536;
 const FLOATS_PER_VERTEX = 6;
@@ -118,6 +119,3 @@ export class ShapeBatcher {
     }
   }
 }
-
-/** @deprecated Use ShapeBatcher */
-export const DebugBatcher = ShapeBatcher;

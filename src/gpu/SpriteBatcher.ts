@@ -5,9 +5,9 @@ import { WebGPUContext } from "./WebGPUContext.js";
 import {
   createSpritePipeline,
   createTextureBindGroup,
-  writeMat3Uniform,
   type SpritePipeline,
 } from "./spriteShaders.js";
+import { writeMat3Uniform } from "./uniforms.js";
 
 const MAX_SPRITE_VERTICES = 65_536;
 const FLOATS_PER_VERTEX = 8;

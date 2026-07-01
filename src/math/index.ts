@@ -170,10 +170,3 @@ export const Mat3 = {
 };
 
 export type Vec2 = { x: number; y: number };
-
-export const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
-
-export const clamp = (value: number, min: number, max: number): number =>
-  Math.min(Math.max(value, min), max);
-
-export const degToRad = (deg: number): number => (deg / 180) * Math.PI;

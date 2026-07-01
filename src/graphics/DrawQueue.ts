@@ -139,8 +139,3 @@ export class DrawQueue {
     this.commands = [];
   }
 }
-
-/** @deprecated Use ShapeRectCommand */
-export type DebugRectCommand = ShapeRectCommand;
-/** @deprecated Use ShapeLineCommand */
-export type DebugLineCommand = ShapeLineCommand;

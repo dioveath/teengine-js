@@ -1,3 +1,4 @@
+import type { RigidBodyHandle } from "../physics/PhysicsWorld.js";
 import type { Color } from "../math/index.js";
 import { Transform, type Transform as TransformData } from "./Transform.js";
 
@@ -11,6 +12,19 @@ export type SpriteComponent = {
   flipX?: boolean;
   flipY?: boolean;
   z?: number;
+};
+
+export type ColliderConfig =
+  | { kind: "box"; width: number; height: number }
+  | { kind: "ball"; radius: number };
+
+export type RigidBodyComponent = {
+  type: "dynamic" | "fixed" | "kinematicPosition";
+  collider: ColliderConfig;
+  handle?: RigidBodyHandle;
+  restitution?: number;
+  friction?: number;
+  lockRotation?: boolean;
 };
 
 export type ShapeRect = {
@@ -48,6 +62,7 @@ export type Entity = {
   transform: TransformData;
   sprite?: SpriteComponent;
   shape?: ShapeComponent;
+  rigidBody?: RigidBodyComponent;
   update?: (entity: Entity, dt: number, time: number) => void;
 };
 
@@ -55,6 +70,7 @@ export type SpawnConfig = {
   transform?: Partial<TransformData>;
   sprite?: SpriteComponent;
   shape?: ShapeComponent;
+  rigidBody?: RigidBodyComponent;
   update?: Entity["update"];
 };
 
@@ -65,6 +81,7 @@ export function createEntity(id: EntityId, config: SpawnConfig): Entity {
     transform: Transform.create(config.transform),
     sprite: config.sprite,
     shape: config.shape,
+    rigidBody: config.rigidBody,
     update: config.update,
   };
 }
