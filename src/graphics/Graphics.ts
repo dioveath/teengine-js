@@ -1,102 +1,152 @@
-import { Color, Mat3, type Vec2 } from "../math/index.js";
-import { Renderer } from "../gpu/Renderer.js";
+import type { AtlasRegion } from "../assets/Atlas.js";
+import type { Color } from "../math/index.js";
+import { FrameRenderer } from "../gpu/FrameRenderer.js";
+import { WebGPUContext } from "../gpu/WebGPUContext.js";
+import { Camera2D, createUiCamera } from "./Camera2D.js";
+import {
+  DrawQueue,
+  resolveDrawOptions,
+  type DrawOptions,
+} from "./DrawQueue.js";
+import { LayerRegistry, type LayerSortMode } from "./LayerRegistry.js";
+
+export type RegisterLayerOptions = {
+  camera: Camera2D;
+  sort?: LayerSortMode;
+};
 
 /**
- * Canvas-style 2D graphics API backed by WebGPU.
- *
- * Coordinates use a top-left origin with +Y downward, matching the old
- * Canvas 2D code. Transforms are applied via a matrix stack.
+ * Opinionated 2D graphics API: camera-first, layer-based, sprite batching.
  */
 export class Graphics {
-  private readonly renderer: Renderer;
-  private readonly stack: Float32Array[] = [];
-  private current = Mat3.create();
-  private readonly scratch = { x: 0, y: 0 };
+  private readonly frameRenderer: FrameRenderer;
+  private readonly layers: LayerRegistry;
+  private readonly queue = new DrawQueue();
+  private currentLayer: string | null = null;
+  private uiCamera: Camera2D;
 
-  constructor(renderer: Renderer) {
-    this.renderer = renderer;
-    this.stack.push(Mat3.create());
+  private constructor(frameRenderer: FrameRenderer, layers: LayerRegistry, uiCamera: Camera2D) {
+    this.frameRenderer = frameRenderer;
+    this.layers = layers;
+    this.uiCamera = uiCamera;
+  }
+
+  static async create(gpu: WebGPUContext): Promise<Graphics> {
+    const frameRenderer = await FrameRenderer.create(gpu);
+    const layers = new LayerRegistry();
+    const { width, height } = frameRenderer.viewport;
+    const uiCamera = createUiCamera(width, height);
+    return new Graphics(frameRenderer, layers, uiCamera);
+  }
+
+  /** Must be called before beginLayer(). */
+  registerLayer(name: string, options: RegisterLayerOptions): void {
+    this.layers.register(name, {
+      camera: options.camera,
+      sort: options.sort ?? "z",
+    });
+  }
+
+  /** Update UI camera center when the viewport resizes. */
+  resize(width: number, height: number): void {
+    this.frameRenderer.resize(width, height);
+    this.uiCamera.x = width * 0.5;
+    this.uiCamera.y = height * 0.5;
   }
 
   beginFrame(clearColor: Color): void {
-    this.renderer.beginFrame(clearColor);
+    this.queue.clear();
+    this.currentLayer = null;
+    this.frameRenderer.beginFrame(clearColor);
+  }
+
+  beginLayer(name: string): void {
+    this.layers.get(name);
+    this.currentLayer = name;
+  }
+
+  endLayer(): void {
+    this.currentLayer = null;
+  }
+
+  drawSprite(region: AtlasRegion, opts: DrawOptions): void {
+    if (!this.currentLayer) {
+      throw new Error("drawSprite() called outside of beginLayer()/endLayer().");
+    }
+
+    const layer = this.layers.get(this.currentLayer);
+    this.frameRenderer.spriteBatcher.registerTexture(
+      region.texture.texture,
+      region.texture.view,
+      region.texture.sampler,
+    );
+
+    this.queue.push({
+      kind: "sprite",
+      layer: this.currentLayer,
+      region,
+      opts: resolveDrawOptions(region, opts, layer.sort),
+    });
+  }
+
+  drawDebugRect(x: number, y: number, width: number, height: number, color: Color): void {
+    if (!this.currentLayer) {
+      throw new Error("drawDebugRect() called outside of beginLayer()/endLayer().");
+    }
+    this.queue.push({
+      kind: "debugRect",
+      layer: this.currentLayer,
+      x,
+      y,
+      width,
+      height,
+      color,
+    });
+  }
+
+  drawDebugLine(
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    width: number,
+    color: Color,
+  ): void {
+    if (!this.currentLayer) {
+      throw new Error("drawDebugLine() called outside of beginLayer()/endLayer().");
+    }
+    this.queue.push({
+      kind: "debugLine",
+      layer: this.currentLayer,
+      x0,
+      y0,
+      x1,
+      y1,
+      width,
+      color,
+    });
   }
 
   endFrame(): void {
-    this.renderer.endFrame();
-  }
-
-  save(): void {
-    this.stack.push(new Float32Array(this.current));
-  }
-
-  restore(): void {
-    const restored = this.stack.pop();
-    if (!restored) {
-      throw new Error("Graphics.restore() called without matching save().");
-    }
-    this.current = restored;
-  }
-
-  resetTransform(): void {
-    this.current = Mat3.create();
-  }
-
-  translate(x: number, y: number): void {
-    Mat3.translate(this.current, this.current, x, y);
-  }
-
-  rotate(radians: number): void {
-    Mat3.rotate(this.current, this.current, radians);
-  }
-
-  scale(sx: number, sy: number): void {
-    Mat3.scale(this.current, this.current, sx, sy);
-  }
-
-  fillRect(x: number, y: number, width: number, height: number, color: Color): void {
-    const p0 = this.transformPoint(x, y);
-    const p1 = this.transformPoint(x + width, y);
-    const p2 = this.transformPoint(x + width, y + height);
-    const p3 = this.transformPoint(x, y + height);
-    this.renderer.fillQuad(
-      p0.x,
-      p0.y,
-      p1.x,
-      p1.y,
-      p2.x,
-      p2.y,
-      p3.x,
-      p3.y,
-      color,
+    const grouped = this.queue.byLayer(this.layers.drawOrder);
+    this.frameRenderer.endFrame(
+      this.layers.drawOrder,
+      grouped,
+      (name) => this.layers.get(name),
     );
   }
 
-  fillCircle(x: number, y: number, radius: number, color: Color, segments = 32): void {
-    const center = this.transformPoint(x, y);
-    const edge = this.transformPoint(x + radius, y);
-    const scaledRadius = Math.hypot(edge.x - center.x, edge.y - center.y);
-    this.renderer.fillCircle(center.x, center.y, scaledRadius, color, segments);
-  }
-
-  strokeLine(x0: number, y0: number, x1: number, y1: number, width: number, color: Color): void {
-    const a = this.transformPoint(x0, y0);
-    const b = this.transformPoint(x1, y1);
-    this.renderer.strokeLine(a.x, a.y, b.x, b.y, width, color);
-  }
-
   get viewport(): { width: number; height: number } {
-    return this.renderer.size;
+    return this.frameRenderer.viewport;
   }
 
-  resize(width: number, height: number): void {
-    this.renderer.resize(width, height);
-  }
-
-  private transformPoint(x: number, y: number): Vec2 {
-    Mat3.transformPoint(this.scratch, this.current, x, y);
-    return { x: this.scratch.x, y: this.scratch.y };
+  /** Helper to configure the standard UI layer camera after registerLayer("ui", ...). */
+  getUiCamera(): Camera2D {
+    return this.uiCamera;
   }
 }
 
-export { Color };
+export { Camera2D, createUiCamera } from "./Camera2D.js";
+export { createWorldCamera } from "./Camera2D.js";
+export { Color } from "../math/index.js";
+export type { LayerSortMode } from "./LayerRegistry.js";

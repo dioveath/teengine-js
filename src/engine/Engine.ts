@@ -1,10 +1,8 @@
 import { WebGPUContext } from "../gpu/WebGPUContext.js";
-import { Renderer } from "../gpu/Renderer.js";
 import { Graphics } from "../graphics/Graphics.js";
 
 export type EngineOptions = {
   canvas: HTMLCanvasElement;
-  clearColor?: import("../math/index.js").Color;
 };
 
 export type UpdateCallback = (ctx: {
@@ -31,8 +29,7 @@ export class Engine {
 
   static async create(options: EngineOptions): Promise<Engine> {
     const gpu = await WebGPUContext.create({ canvas: options.canvas });
-    const renderer = await Renderer.create(gpu);
-    const graphics = new Graphics(renderer);
+    const graphics = await Graphics.create(gpu);
     const engine = new Engine(gpu, graphics);
     engine.handleResize();
     return engine;
@@ -40,6 +37,10 @@ export class Engine {
 
   setUpdateCallback(callback: UpdateCallback): void {
     this.onUpdate = callback;
+  }
+
+  get device(): GPUDevice {
+    return this.gpu.device;
   }
 
   start(): void {
