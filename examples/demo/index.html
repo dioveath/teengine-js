@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TeEngine Demo</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #0d1117;
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        outline: none;
+      }
+
+      #fallback {
+        display: none;
+        color: #f0f6fc;
+        font-family: system-ui, sans-serif;
+        padding: 2rem;
+        max-width: 40rem;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" tabindex="0"></canvas>
+    <div id="fallback">
+      <h1>WebGPU not available</h1>
+      <p>
+        TeEngine requires a browser with WebGPU support (Chrome 113+, Edge 113+,
+        or Firefox Nightly with the flag enabled).
+      </p>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

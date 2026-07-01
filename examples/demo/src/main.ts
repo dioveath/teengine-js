@@ -1,9 +1,8 @@
-import { Engine } from "./engine/Engine.js";
-import { createDemoAtlas } from "./assets/createDemoAtlas.js";
-import { Editor } from "./editor/Editor.js";
-import { PhysicsBridge } from "./physics/PhysicsBridge.js";
-import { PhysicsWorld } from "./physics/PhysicsWorld.js";
-import { bindDemoLoop, createDemoScene } from "./scene/DemoScene.js";
+import { Engine } from "teengine";
+import { PhysicsBridge } from "teengine";
+import { PhysicsWorld } from "teengine";
+import { createDemoAtlas } from "./createDemoAtlas.js";
+import { bindDemoLoop, createDemoScene } from "./DemoScene.js";
 
 async function main(): Promise<void> {
   const canvas = document.getElementById("canvas");
@@ -11,7 +10,6 @@ async function main(): Promise<void> {
     throw new Error("Canvas element #canvas not found.");
   }
 
-  const app = document.getElementById("app");
   const fallback = document.getElementById("fallback");
 
   try {
@@ -21,13 +19,7 @@ async function main(): Promise<void> {
     const atlas = createDemoAtlas(engine.device);
 
     const scene = createDemoScene(engine, physics, atlas);
-
-    let editor: Editor | undefined;
-    if (app) {
-      editor = new Editor({ engine, world: scene.world, root: app });
-    }
-
-    bindDemoLoop(scene, { onRender: () => editor?.update() });
+    bindDemoLoop(scene);
     engine.start();
   } catch (error) {
     console.error(error);

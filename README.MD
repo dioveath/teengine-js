@@ -1,8 +1,8 @@
 # TeEngine
 
-Simple **2D TypeScript game engine** using **WebGPU** for rendering, **Rapier** for physics, and a built-in **editor panel**.
+Simple **2D TypeScript game engine** using **WebGPU** and **Rapier** physics.
 
-Originally a Canvas 2D learning project (2017); now rebuilt with a modern GPU pipeline, systems-based ECS, and in-browser editing.
+Ships as the **`teengine`** npm package. This repo is a monorepo: library in `packages/teengine`, demo in `examples/demo`.
 
 ## Quick start
 
@@ -11,51 +11,51 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173 in a WebGPU-capable browser (Chrome 113+, Edge 113+).
+Open http://localhost:5173 — click the canvas to focus.
 
-Click the canvas to focus. Use the editor panel on the left to inspect entities and pause/play.
+## Use in your project
 
-## Controls (demo)
+```bash
+npm install teengine
+```
+
+```ts
+import { Engine, World, PhysicsBridge, PhysicsWorld, Layers, Color } from "teengine";
+
+const engine = await Engine.create({ canvas });
+const physics = new PhysicsBridge(await PhysicsWorld.create());
+const world = new World(physics);
+// … register layers, spawn entities, add systems
+```
+
+See [docs/PACKAGE.md](./docs/PACKAGE.md) for monorepo layout and [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for engine design.
+
+## Demo controls
 
 | Input | Action |
 |-------|--------|
 | Arrow / WASD | Move player |
 | Space / Up | Jump |
-| Mouse | Draw debug circle in world |
-
-## Project structure
-
-- `src/ecs/` — World, Entity, systems (PlayerController, Spin, Render, CameraFollow)
-- `src/engine/` — Fixed timestep game loop with pause
-- `src/editor/` — Hierarchy, inspector, play/pause UI
-- `src/scene/` — DemoScene setup
-- `src/graphics/` — Camera-first Graphics API, typed `Layers`
-- `src/physics/` — PhysicsWorld + PhysicsBridge (decoupled handles, interpolation)
-- `src/assets/` — Demo atlas + JSON atlas loader
-- `docs/ARCHITECTURE.md` — Engine design
-- `legacy/` — Original Canvas 2D prototype
+| Mouse | Debug circle in world |
 
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start Vite dev server |
-| `npm run build` | Typecheck + production build |
-| `npm run typecheck` | TypeScript only |
+| `npm run dev` | Build engine + run demo |
+| `npm run build` | Build `teengine` package |
+| `npm run build:demo` | Build engine + demo |
+| `npm run typecheck` | Typecheck all workspaces |
 
-## Roadmap
+## Package layout
 
-- [x] WebGPU rendering with camera + layers
-- [x] Sprite batching (`drawSprite`, atlas regions)
-- [x] Entity system + fixed timestep + systems
-- [x] Input system (keyboard actions + mouse)
-- [x] Rapier 2D physics + PhysicsBridge
-- [x] Render interpolation
-- [x] Editor UI (hierarchy, inspector, play/pause)
-- [x] JSON atlas loader
-- [ ] Collision events / sensors
-- [ ] Editor: viewport picking, add/remove entities
+```
+packages/teengine/   → publishable library (`teengine`)
+examples/demo/       → Vite demo app
+docs/                → architecture + package docs
+legacy/              → original Canvas 2D prototype
+```
 
 ## License
 
-See repository history — personal learning project by @dioveath.
+MIT — personal learning project by @dioveath.

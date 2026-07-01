@@ -1,8 +1,5 @@
-import type { RenderSystem } from "../ecs/System.js";
-import type { Camera2D } from "../graphics/Camera2D.js";
-import { Layers } from "../graphics/Layers.js";
-import type { Graphics } from "../graphics/Graphics.js";
-import { Color } from "../math/index.js";
+import { Color, Layers, type Camera2D, type Graphics } from "teengine";
+import type { RenderSystem } from "teengine";
 
 export type DebugOverlayOptions = {
   groundY: number;
@@ -18,7 +15,7 @@ export class DebugOverlaySystem implements RenderSystem {
     private readonly options: DebugOverlayOptions,
   ) {}
 
-  render(ctx: import("../ecs/System.js").RenderSystemContext): void {
+  render(ctx: import("teengine").RenderSystemContext): void {
     const { input, width, height } = ctx;
     const { groundY, worldCamera } = this.options;
 

@@ -1,21 +1,19 @@
 {
-  "name": "teengine",
-  "version": "0.2.0",
+  "name": "teengine-js",
   "private": true,
   "type": "module",
-  "description": "Simple 2D TypeScript game engine powered by WebGPU",
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "build": "npm run build -w teengine",
+    "build:demo": "npm run build -w teengine && npm run build -w demo",
+    "dev": "npm run build -w teengine && npm run dev -w demo",
+    "typecheck": "npm run typecheck -w teengine && npm run typecheck -w demo"
   },
   "devDependencies": {
     "@webgpu/types": "^0.1.60",
-    "typescript": "^5.8.3",
-    "vite": "^6.3.5"
-  },
-  "dependencies": {
-    "@dimforge/rapier2d": "^0.19.3"
+    "typescript": "^5.8.3"
   }
 }

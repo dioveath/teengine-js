@@ -1,0 +1,33 @@
+{
+  "name": "teengine",
+  "version": "0.3.0",
+  "description": "Simple 2D TypeScript game engine powered by WebGPU",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dioveath/teengine-js",
+    "directory": "packages/teengine"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dimforge/rapier2d": "^0.19.3"
+  },
+  "devDependencies": {
+    "@webgpu/types": "^0.1.60",
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3"
+  },
+  "keywords": ["game-engine", "webgpu", "2d", "typescript", "rapier"]
+}

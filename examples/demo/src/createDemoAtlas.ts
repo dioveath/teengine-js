@@ -1,4 +1,4 @@
-import type { AtlasRegion, DemoAtlas, GpuTexture } from "./Atlas.js";
+import type { AtlasRegion, DemoAtlas, GpuTexture } from "teengine";
 
 const CELL = 32;
 const COLS = 4;

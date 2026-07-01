@@ -1,15 +1,19 @@
-import type { DemoAtlas } from "../assets/Atlas.js";
-import type { Engine } from "../engine/Engine.js";
-import { CameraFollowSystem } from "../ecs/systems/CameraFollowSystem.js";
-import { WorldEntityRenderSystem } from "../ecs/systems/EntityRenderSystem.js";
-import { PlayerControllerSystem } from "../ecs/systems/PlayerControllerSystem.js";
-import { SpinSystem } from "../ecs/systems/SpinSystem.js";
-import { World } from "../ecs/World.js";
-import type { EntityId } from "../ecs/Entity.js";
-import { Color, createUiCamera, createWorldCamera } from "../graphics/Graphics.js";
-import { Layers } from "../graphics/Layers.js";
-import type { PhysicsBridge } from "../physics/PhysicsBridge.js";
+import type { DemoAtlas } from "teengine";
+import {
+  CameraFollowSystem,
+  Color,
+  createUiCamera,
+  createWorldCamera,
+  Layers,
+  SpinSystem,
+  World,
+  WorldEntityRenderSystem,
+  type Engine,
+  type EntityId,
+} from "teengine";
+import type { PhysicsBridge } from "teengine";
 import { DebugOverlaySystem } from "./DebugOverlaySystem.js";
+import { PlayerControllerSystem } from "./PlayerControllerSystem.js";
 
 export const GROUND_Y = 300;
 export const PLAYER_SIZE = 28;
@@ -100,7 +104,9 @@ export function createDemoScene(
   world.addFixedSystem(new SpinSystem());
   world.addRenderSystem(new CameraFollowSystem(worldCam));
   world.addRenderSystem(new WorldEntityRenderSystem(engine.graphics));
-  world.addRenderSystem(new DebugOverlaySystem(engine.graphics, { groundY: GROUND_Y, worldCamera: worldCam }));
+  world.addRenderSystem(
+    new DebugOverlaySystem(engine.graphics, { groundY: GROUND_Y, worldCamera: worldCam }),
+  );
 
   return {
     engine,
@@ -113,10 +119,7 @@ export function createDemoScene(
   };
 }
 
-export function bindDemoLoop(
-  scene: DemoSceneContext,
-  hooks?: { onRender?: () => void },
-): void {
+export function bindDemoLoop(scene: DemoSceneContext): void {
   const { engine, world, physics, uiCamera } = scene;
 
   engine.setLoop({
@@ -130,8 +133,6 @@ export function bindDemoLoop(
       graphics.beginFrame(Color.hex("#0d1117"));
       world.render({ dt, time, tick, input, physics, alpha, width, height });
       graphics.endFrame();
-
-      hooks?.onRender?.();
     },
   });
 }

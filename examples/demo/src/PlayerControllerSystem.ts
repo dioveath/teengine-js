@@ -1,4 +1,4 @@
-import type { FixedSystem } from "../System.js";
+import type { FixedSystem } from "teengine";
 
 const MOVE_SPEED = 220;
 const JUMP_IMPULSE = 280;
@@ -6,7 +6,7 @@ const JUMP_IMPULSE = 280;
 export class PlayerControllerSystem implements FixedSystem {
   readonly name = "PlayerControllerSystem";
 
-  fixedUpdate(ctx: import("../System.js").FixedSystemContext): void {
+  fixedUpdate(ctx: import("teengine").FixedSystemContext): void {
     const { world, input, physics } = ctx;
     if (!physics) return;
 
