@@ -1,96 +1,121 @@
 # TeEngine Architecture
 
-TeEngine is a **simple 2D TypeScript game engine** with **WebGPU** rendering.
+TeEngine is a **simple 2D TypeScript game engine** with **WebGPU** rendering, **systems-based ECS**, **Rapier physics**, and an **in-browser editor**.
 
 ## Layer stack
 
 ```
-Game code (main.ts)
+Game code (scene + systems)
     ↓
-World                 entities, fixed update, physics sync, render
+World                 entities, systems, physics sync, render interpolation
     ↓
-Engine                fixed timestep (1/60s) + input + render loop
+Engine                fixed timestep (1/60s) + input + render loop + pause
     ↓
 Graphics API          cameras, layers, drawSprite, shapes
     ↓
 DrawQueue             collects commands per frame
     ↓
-FrameRenderer         sorts per layer, submits GPU passes
+FrameRenderer         sorts per layer (registry order), submits GPU passes
     ├── SpriteBatcher  textured quads (primary)
-    └── ShapeBatcher colored rects/circles/lines
+    └── ShapeBatcher   colored rects/circles/lines
     ↓
 WebGPUContext
 
-PhysicsWorld (Rapier 2D) ←→ World.syncFromPhysics()
+PhysicsBridge (Rapier 2D) ←→ World.fixedUpdate()
+Editor UI (DOM panel)     ←→ World inspector / play-pause
 ```
+
+## ECS + Systems
+
+Entities are component bags. Behavior lives in **systems**, not per-entity callbacks:
+
+```ts
+world.addFixedSystem(new PlayerControllerSystem());
+world.addFixedSystem(new SpinSystem());
+world.addRenderSystem(new WorldEntityRenderSystem(graphics));
+world.addRenderSystem(new CameraFollowSystem(worldCamera));
+```
+
+Component tags: `player`, `cameraTarget`, `spin`. Physics runtime handles live in `PhysicsBridge`, not on components.
 
 ## Game loop
 
 ```ts
-const physics = await PhysicsWorld.create({ gravityY: 980 });
-world.attachPhysics(physics);
+const physics = new PhysicsBridge(await PhysicsWorld.create({ gravityY: 980 }));
+const world = new World(physics);
 
 engine.setLoop({
-  fixedUpdate: ({ dt, input }) => {
-    physics.step(dt);
-    world.syncFromPhysics();
-    world.update(dt);
-  },
-  render: ({ graphics }) => {
-    world.render(graphics);
+  fixedUpdate: (ctx) => world.fixedUpdate({ ...ctx, physics }),
+  render: (ctx) => {
+    graphics.beginFrame(clear);
+    world.render({ ...ctx, physics }); // systems + interpolated transforms
     graphics.endFrame();
   },
 });
 ```
 
-## Input
+Input is polled **once per visual frame**. `actionPressed()` consumes edges so multi-step fixed updates don't double-fire.
+
+Render interpolation: `PhysicsBridge` snapshots previous transforms, lerps with `alpha` during render.
+
+## Layers
+
+Use typed layer names from `Layers` (not raw strings):
 
 ```ts
-engine.input.bindAction("move_left", ["ArrowLeft", "KeyA"]);
+import { Layers } from "teengine";
 
-fixedUpdate: ({ input }) => {
-  const dx = input.actionAxis("move_left", "move_right");
-  if (input.actionPressed("jump")) { /* ... */ }
-};
+graphics.registerLayer(Layers.world, { camera: worldCam, sort: "y" });
+graphics.registerLayer(Layers.ui, { camera: uiCam, sort: "z" });
 ```
+
+`WorldEntityRenderSystem` draws in **registry order** and respects each layer's sort mode.
+
+## Editor
+
+The editor panel provides:
+
+- **Hierarchy** — click to select entities
+- **Inspector** — edit name, active, transform, spin speed
+- **Play / Pause** — pauses fixed update; rendering continues for live editing
 
 ## Physics
 
-Entities optionally include `rigidBody`. Rapier runs in **Y-up**; `src/physics/coords.ts` converts at the boundary. TeEngine world remains **Y-down**.
+`PhysicsBridge` decouples Rapier from ECS. Authoring config stays on `rigidBody`; handles and interpolation state stay in the bridge.
+
+## Assets
 
 ```ts
-world.spawn({
-  transform: { x: 400, y: 280 },
-  sprite: { region: atlas.player, layer: "world" },
-  rigidBody: {
-    type: "dynamic",
-    collider: { kind: "box", width: 28, height: 28 },
-    lockRotation: true,
-  },
-});
+const atlas = await loadAtlasFromJson(device, "/assets/sprites.json");
+graphics.drawSprite(atlas.player, { x, y });
 ```
 
 ## Directory layout
 
 ```
 src/
-  engine/       Fixed timestep game loop
-  ecs/          World, Entity, Transform
+  engine/       Fixed timestep game loop, pause
+  ecs/          World, Entity, systems/
+  editor/       In-browser editor panel
+  scene/        DemoScene, debug overlays
   input/        Input, ActionMap
-  physics/      PhysicsWorld, coord conversion
-  graphics/     Graphics, Camera2D, DrawQueue, LayerRegistry
-  gpu/          WebGPU, batchers, FrameRenderer, uniforms
-  assets/       Atlas types, demo atlas
+  physics/      PhysicsWorld, PhysicsBridge, coords
+  graphics/     Graphics, Camera2D, Layers, DrawQueue
+  gpu/          WebGPU, batchers, FrameRenderer
+  assets/       Atlas types, demo atlas, JSON loader
   math/         Color, Mat3
 ```
 
 ## Roadmap
 
 - [x] WebGPU + cameras + layers + sprites
-- [x] Entity system + fixed timestep
+- [x] Entity system + fixed timestep + systems
 - [x] Input system
 - [x] Shape primitives
-- [x] Rapier 2D physics
-- [ ] JSON atlas loader
+- [x] Rapier 2D physics + PhysicsBridge
+- [x] Render interpolation
+- [x] Editor UI (hierarchy, inspector, play/pause)
+- [x] JSON atlas loader
 - [ ] Collision events / sensors
 - [ ] Kinematic character controller
+- [ ] Editor: drag entities in viewport, add/remove entities

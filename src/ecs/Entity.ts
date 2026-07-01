@@ -1,12 +1,12 @@
-import type { RigidBodyHandle } from "../physics/PhysicsWorld.js";
 import type { Color } from "../math/index.js";
+import type { LayerName } from "../graphics/Layers.js";
 import { Transform, type Transform as TransformData } from "./Transform.js";
 
 export type EntityId = number;
 
 export type SpriteComponent = {
   region: import("../assets/Atlas.js").AtlasRegion;
-  layer: string;
+  layer: LayerName;
   origin?: { x: number; y: number };
   tint?: Color;
   flipX?: boolean;
@@ -18,10 +18,10 @@ export type ColliderConfig =
   | { kind: "box"; width: number; height: number }
   | { kind: "ball"; radius: number };
 
+/** Authoring-only physics config — runtime handles live in PhysicsBridge. */
 export type RigidBodyComponent = {
   type: "dynamic" | "fixed" | "kinematicPosition";
   collider: ColliderConfig;
-  handle?: RigidBodyHandle;
   restitution?: number;
   friction?: number;
   lockRotation?: boolean;
@@ -53,35 +53,53 @@ export type ShapeLine = {
 };
 
 export type ShapeComponent = (ShapeRect | ShapeCircle | ShapeLine) & {
-  layer: string;
+  layer: LayerName;
 };
+
+/** Marker: entity is the player character. */
+export type PlayerTag = { readonly _tag: "player" };
+
+/** Marker: camera follows this entity. */
+export type CameraTargetTag = { readonly _tag: "cameraTarget" };
+
+/** Rotates entity over time (radians per second). */
+export type SpinComponent = { speed: number };
 
 export type Entity = {
   id: EntityId;
+  name: string;
   active: boolean;
   transform: TransformData;
   sprite?: SpriteComponent;
   shape?: ShapeComponent;
   rigidBody?: RigidBodyComponent;
-  update?: (entity: Entity, dt: number, time: number) => void;
+  player?: PlayerTag;
+  cameraTarget?: CameraTargetTag;
+  spin?: SpinComponent;
 };
 
 export type SpawnConfig = {
+  name?: string;
   transform?: Partial<TransformData>;
   sprite?: SpriteComponent;
   shape?: ShapeComponent;
   rigidBody?: RigidBodyComponent;
-  update?: Entity["update"];
+  player?: PlayerTag;
+  cameraTarget?: CameraTargetTag;
+  spin?: SpinComponent;
 };
 
 export function createEntity(id: EntityId, config: SpawnConfig): Entity {
   return {
     id,
+    name: config.name ?? `Entity ${id}`,
     active: true,
     transform: Transform.create(config.transform),
     sprite: config.sprite,
     shape: config.shape,
     rigidBody: config.rigidBody,
-    update: config.update,
+    player: config.player,
+    cameraTarget: config.cameraTarget,
+    spin: config.spin,
   };
 }

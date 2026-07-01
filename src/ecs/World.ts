@@ -1,25 +1,49 @@
-import type { Graphics } from "../graphics/Graphics.js";
-import type { PhysicsWorld } from "../physics/PhysicsWorld.js";
+import type { LayerSortMode } from "../graphics/LayerRegistry.js";
+import type { PhysicsBridge } from "../physics/PhysicsBridge.js";
+import type { TransformSnapshot } from "./interpolation.js";
 import { createEntity, type Entity, type EntityId, type SpawnConfig } from "./Entity.js";
+import type { FixedSystem, RenderSystem } from "./System.js";
 
-type LayerRenderables = {
+type LayerBucket = {
   sprites: Entity[];
   shapes: Entity[];
 };
 
 export class World {
   private readonly entities = new Map<EntityId, Entity>();
+  private readonly fixedSystems: FixedSystem[] = [];
+  private readonly renderSystems: RenderSystem[] = [];
+  private readonly scratchTransform: TransformSnapshot = {
+    x: 0,
+    y: 0,
+    rotation: 0,
+    scaleX: 1,
+    scaleY: 1,
+  };
+
   private nextId: EntityId = 1;
   private time = 0;
-  private physics: PhysicsWorld | null = null;
+  private readonly physics: PhysicsBridge | null;
+
+  constructor(physics: PhysicsBridge | null = null) {
+    this.physics = physics;
+  }
+
+  addFixedSystem(system: FixedSystem): void {
+    this.fixedSystems.push(system);
+  }
+
+  addRenderSystem(system: RenderSystem): void {
+    this.renderSystems.push(system);
+  }
 
   spawn(config: SpawnConfig): EntityId {
     const id = this.nextId++;
     const entity = createEntity(id, config);
     this.entities.set(id, entity);
 
-    if (this.physics && entity.rigidBody) {
-      entity.rigidBody.handle = this.physics.createBodyForEntity(entity);
+    if (entity.rigidBody && this.physics) {
+      this.physics.register(entity);
     }
 
     return id;
@@ -29,96 +53,96 @@ export class World {
     return this.entities.get(id);
   }
 
+  /** All entities in spawn order. */
+  getAll(): readonly Entity[] {
+    return [...this.entities.values()];
+  }
+
   remove(id: EntityId): void {
-    const entity = this.entities.get(id);
-    if (entity?.rigidBody?.handle !== undefined && this.physics) {
-      this.physics.removeBody(entity.rigidBody.handle);
-    }
+    this.physics?.unregister(id);
     this.entities.delete(id);
   }
 
-  /** Attach physics and create bodies for existing entities with rigidBody. */
-  attachPhysics(physics: PhysicsWorld): void {
-    this.physics = physics;
-    for (const entity of this.entities.values()) {
-      if (entity.rigidBody && entity.rigidBody.handle === undefined) {
-        entity.rigidBody.handle = physics.createBodyForEntity(entity);
-      }
+  fixedUpdate(ctx: Omit<import("./System.js").FixedSystemContext, "world">): void {
+    this.time += ctx.dt;
+
+    const fullCtx = { ...ctx, world: this, physics: this.physics };
+
+    this.physics?.snapshotPreviousTransforms((id) => this.entities.get(id)?.transform);
+
+    for (const system of this.fixedSystems) {
+      system.fixedUpdate(fullCtx);
+    }
+
+    this.physics?.step(ctx.dt);
+    this.physics?.syncToEntities((id) => this.entities.get(id));
+  }
+
+  render(ctx: Omit<import("./System.js").RenderSystemContext, "world">): void {
+    const fullCtx = { ...ctx, world: this, physics: this.physics };
+    for (const system of this.renderSystems) {
+      system.render(fullCtx);
     }
   }
 
-  /** Copy Rapier transforms into entity transforms after physics step. */
-  syncFromPhysics(): void {
-    if (!this.physics) return;
-
-    for (const entity of this.entities.values()) {
-      const handle = entity.rigidBody?.handle;
-      if (handle === undefined) continue;
-
-      const t = this.physics.getTransform(handle);
-      entity.transform.x = t.x;
-      entity.transform.y = t.y;
-      entity.transform.rotation = t.rotation;
-    }
-  }
-
-  get physicsWorld(): PhysicsWorld | null {
+  get physicsBridge(): PhysicsBridge | null {
     return this.physics;
-  }
-
-  update(fixedDt: number): void {
-    this.time += fixedDt;
-    for (const entity of this.entities.values()) {
-      if (!entity.active) continue;
-      entity.update?.(entity, fixedDt, this.time);
-    }
-  }
-
-  render(graphics: Graphics): void {
-    const byLayer = new Map<string, LayerRenderables>();
-
-    for (const entity of this.entities.values()) {
-      if (!entity.active) continue;
-
-      if (entity.sprite) {
-        this.addToLayer(byLayer, entity.sprite.layer, entity, "sprite");
-      }
-      if (entity.shape) {
-        this.addToLayer(byLayer, entity.shape.layer, entity, "shape");
-      }
-    }
-
-    for (const [layer, { sprites, shapes }] of byLayer) {
-      sprites.sort((a, b) => a.transform.y - b.transform.y);
-      shapes.sort((a, b) => a.transform.y - b.transform.y);
-
-      graphics.beginLayer(layer);
-
-      for (const entity of shapes) {
-        this.drawShapeEntity(graphics, entity);
-      }
-      for (const entity of sprites) {
-        this.drawSpriteEntity(graphics, entity);
-      }
-
-      graphics.endLayer();
-    }
   }
 
   get elapsed(): number {
     return this.time;
   }
 
-  private addToLayer(
-    byLayer: Map<string, LayerRenderables>,
+  /** Collect renderables into reusable buckets keyed by layer. */
+  collectRenderables(out: Map<string, LayerBucket>): Map<string, LayerBucket> {
+    for (const bucket of out.values()) {
+      bucket.sprites.length = 0;
+      bucket.shapes.length = 0;
+    }
+
+    for (const entity of this.entities.values()) {
+      if (!entity.active) continue;
+
+      if (entity.sprite) {
+        this.addToBucket(out, entity.sprite.layer, entity, "sprite");
+      }
+      if (entity.shape) {
+        this.addToBucket(out, entity.shape.layer, entity, "shape");
+      }
+    }
+
+    return out;
+  }
+
+  /** Interpolated transform for rendering (physics bodies lerp between ticks). */
+  getRenderTransform(entity: Entity, alpha: number): TransformSnapshot {
+    if (this.physics?.hasBody(entity.id)) {
+      return this.physics.getInterpolatedTransform(
+        entity.id,
+        entity.transform,
+        alpha,
+        this.scratchTransform,
+      );
+    }
+    return {
+      x: entity.transform.x,
+      y: entity.transform.y,
+      rotation: entity.transform.rotation,
+      scaleX: entity.transform.scaleX,
+      scaleY: entity.transform.scaleY,
+    };
+  }
+
+  private addToBucket(
+    out: Map<string, LayerBucket>,
     layer: string,
     entity: Entity,
     kind: "sprite" | "shape",
   ): void {
-    let bucket = byLayer.get(layer);
+    let bucket = out.get(layer);
     if (!bucket) {
       bucket = { sprites: [], shapes: [] };
-      byLayer.set(layer, bucket);
+      out.set(layer, bucket);
     }
     if (kind === "sprite") {
       bucket.sprites.push(entity);
@@ -126,40 +150,13 @@ export class World {
       bucket.shapes.push(entity);
     }
   }
+}
 
-  private drawSpriteEntity(graphics: Graphics, entity: Entity): void {
-    const sprite = entity.sprite;
-    if (!sprite) return;
-    const { transform } = entity;
-    graphics.drawSprite(sprite.region, {
-      x: transform.x,
-      y: transform.y,
-      z: sprite.z,
-      rotation: transform.rotation,
-      scale: { x: transform.scaleX, y: transform.scaleY },
-      origin: sprite.origin,
-      tint: sprite.tint,
-      flipX: sprite.flipX,
-      flipY: sprite.flipY,
-    });
-  }
-
-  private drawShapeEntity(graphics: Graphics, entity: Entity): void {
-    const shape = entity.shape;
-    if (!shape) return;
-    const { x, y } = entity.transform;
-
-    if (shape.kind === "rect") {
-      graphics.drawRect(x, y, shape.width, shape.height, shape.color, { z: shape.z });
-    } else if (shape.kind === "circle") {
-      graphics.drawCircle(x, y, shape.radius, shape.color, {
-        z: shape.z,
-        segments: shape.segments,
-      });
-    } else if (shape.kind === "line") {
-      graphics.drawLine(x, y, shape.endX, shape.endY, shape.thickness, shape.color, {
-        z: shape.z,
-      });
-    }
-  }
+export function sortEntitiesForLayer(
+  entities: Entity[],
+  mode: LayerSortMode,
+  getSortKey: (entity: Entity) => number,
+): void {
+  if (mode === "none") return;
+  entities.sort((a, b) => getSortKey(a) - getSortKey(b));
 }

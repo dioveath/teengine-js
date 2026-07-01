@@ -20,6 +20,7 @@ export class Input {
   private readonly canvas: HTMLCanvasElement;
   private readonly keysDown = new Set<string>();
   private previousKeys = new Set<string>();
+  private readonly consumedPresses = new Set<string>();
   private readonly boundCodes = new Set<string>();
 
   private mouseX = 0;
@@ -68,9 +69,10 @@ export class Input {
     canvas.addEventListener("mouseleave", this.onMouseLeave);
   }
 
-  /** Call once at the start of each fixed update tick. */
+  /** Call once at the start of each visual frame (before the fixed-update loop). */
   beginFrame(): void {
     this.previousKeys = new Set(this.keysDown);
+    this.consumedPresses.clear();
   }
 
   bindAction(action: string, codes: readonly string[]): void {
@@ -85,7 +87,10 @@ export class Input {
   }
 
   keyPressed(code: string): boolean {
-    return this.keysDown.has(code) && !this.previousKeys.has(code);
+    if (!this.keysDown.has(code) || this.previousKeys.has(code)) return false;
+    if (this.consumedPresses.has(code)) return false;
+    this.consumedPresses.add(code);
+    return true;
   }
 
   keyReleased(code: string): boolean {

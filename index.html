@@ -5,12 +5,179 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>TeEngine — WebGPU</title>
     <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
       html,
       body {
         margin: 0;
         height: 100%;
         overflow: hidden;
         background: #0d1117;
+        color: #c9d1d9;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+
+      #app {
+        display: flex;
+        height: 100%;
+        width: 100%;
+      }
+
+      #editor-panel {
+        width: 280px;
+        min-width: 280px;
+        background: #161b22;
+        border-right: 1px solid #30363d;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .editor-header {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #30363d;
+      }
+
+      .editor-header h1 {
+        margin: 0 0 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #f0f6fc;
+      }
+
+      .editor-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .editor-toolbar button {
+        background: #238636;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.8125rem;
+        cursor: pointer;
+      }
+
+      .editor-toolbar button:hover {
+        background: #2ea043;
+      }
+
+      #editor-status {
+        font-size: 0.75rem;
+        color: #8b949e;
+      }
+
+      .editor-section {
+        padding: 0.75rem 1rem;
+        overflow-y: auto;
+        flex: 1;
+      }
+
+      .editor-section h2 {
+        margin: 0 0 0.5rem;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #8b949e;
+      }
+
+      .editor-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .editor-list-item {
+        margin-bottom: 2px;
+      }
+
+      .editor-entity-btn {
+        width: 100%;
+        text-align: left;
+        background: transparent;
+        border: none;
+        color: #c9d1d9;
+        padding: 0.35rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8125rem;
+        cursor: pointer;
+      }
+
+      .editor-entity-btn:hover {
+        background: #21262d;
+      }
+
+      .editor-list-item.selected .editor-entity-btn {
+        background: #388bfd26;
+        color: #58a6ff;
+      }
+
+      .editor-inspector {
+        font-size: 0.8125rem;
+      }
+
+      .editor-empty {
+        color: #8b949e;
+        margin: 0;
+      }
+
+      .editor-form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+
+      .editor-subheading {
+        margin: 0.5rem 0 0.25rem;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #8b949e;
+      }
+
+      .editor-field {
+        display: grid;
+        grid-template-columns: 72px 1fr;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .editor-field span:first-child {
+        color: #8b949e;
+      }
+
+      .editor-field input[type="number"],
+      .editor-field input[type="text"] {
+        background: #0d1117;
+        border: 1px solid #30363d;
+        border-radius: 4px;
+        color: #c9d1d9;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8125rem;
+        width: 100%;
+      }
+
+      .editor-field-check {
+        grid-template-columns: auto 1fr;
+      }
+
+      .editor-field-readonly {
+        color: #8b949e;
+      }
+
+      #viewport {
+        flex: 1;
+        position: relative;
+        min-width: 0;
       }
 
       canvas {
@@ -23,7 +190,6 @@
       #fallback {
         display: none;
         color: #f0f6fc;
-        font-family: system-ui, sans-serif;
         padding: 2rem;
         max-width: 40rem;
         line-height: 1.5;
@@ -31,7 +197,11 @@
     </style>
   </head>
   <body>
-    <canvas id="canvas" tabindex="0"></canvas>
+    <div id="app">
+      <main id="viewport">
+        <canvas id="canvas" tabindex="0"></canvas>
+      </main>
+    </div>
     <div id="fallback">
       <h1>WebGPU not available</h1>
       <p>

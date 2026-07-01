@@ -161,6 +161,15 @@ export class Graphics {
     return this.frameRenderer.viewport;
   }
 
+  /** Registered layer draw order. */
+  get layerOrder(): readonly string[] {
+    return this.layers.drawOrder;
+  }
+
+  getLayerSortMode(name: string): LayerSortMode {
+    return this.layers.get(name).sort;
+  }
+
   private requireLayer(caller: string): string {
     if (!this.currentLayer) {
       throw new Error(`${caller}() called outside of beginLayer()/endLayer().`);

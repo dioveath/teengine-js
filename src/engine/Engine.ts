@@ -42,6 +42,7 @@ export class Engine {
   private readonly maxFrameSteps: number;
 
   private running = false;
+  private paused = false;
   private lastTime = 0;
   private fixedAccumulator = 0;
   private tick = 0;
@@ -83,6 +84,14 @@ export class Engine {
     this.loop = callbacks;
   }
 
+  setPaused(paused: boolean): void {
+    this.paused = paused;
+  }
+
+  get isPaused(): boolean {
+    return this.paused;
+  }
+
   get device(): GPUDevice {
     return this.gpu.device;
   }
@@ -108,21 +117,24 @@ export class Engine {
       this.lastTime = time;
 
       if (this.loop) {
-        this.fixedAccumulator += dt;
-        let steps = 0;
+        this.input.beginFrame();
 
-        while (this.fixedAccumulator >= this.fixedDt && steps < this.maxFrameSteps) {
-          this.input.beginFrame();
-          this.loop.fixedUpdate({
-            dt: this.fixedDt,
-            tick: this.tick,
-            time: this.simulationTime,
-            input: this.input,
-          });
-          this.simulationTime += this.fixedDt;
-          this.fixedAccumulator -= this.fixedDt;
-          this.tick += 1;
-          steps += 1;
+        if (!this.paused) {
+          this.fixedAccumulator += dt;
+          let steps = 0;
+
+          while (this.fixedAccumulator >= this.fixedDt && steps < this.maxFrameSteps) {
+            this.loop.fixedUpdate({
+              dt: this.fixedDt,
+              tick: this.tick,
+              time: this.simulationTime,
+              input: this.input,
+            });
+            this.simulationTime += this.fixedDt;
+            this.fixedAccumulator -= this.fixedDt;
+            this.tick += 1;
+            steps += 1;
+          }
         }
 
         const alpha = this.fixedAccumulator / this.fixedDt;

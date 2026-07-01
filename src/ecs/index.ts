@@ -11,5 +11,9 @@ export type {
   ShapeRect,
   ShapeCircle,
   ShapeLine,
+  PlayerTag,
+  CameraTargetTag,
+  SpinComponent,
 } from "./Entity.js";
-export { World } from "./World.js";
+export { World, sortEntitiesForLayer } from "./World.js";
+export type { FixedSystem, RenderSystem, FixedSystemContext, RenderSystemContext } from "./System.js";
