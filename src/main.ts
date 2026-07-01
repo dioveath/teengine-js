@@ -25,6 +25,13 @@ async function main(): Promise<void> {
     const playerId = world.spawn({
       transform: { x: 400, y: 300 },
       sprite: { region: atlas.player, layer: "world" },
+      shape: {
+        kind: "circle",
+        layer: "world",
+        radius: 140,
+        color: Color.rgb(0.2, 0.25, 0.3, 0.15),
+        segments: 48,
+      },
       update: (entity, _dt, time) => {
         entity.transform.x = 400 + Math.cos(time) * 120;
         entity.transform.y = 300 + Math.sin(time * 1.3) * 80;
@@ -69,12 +76,11 @@ async function main(): Promise<void> {
         }
 
         graphics.beginFrame(Color.hex("#0d1117"));
-
         world.render(graphics);
 
         if (player) {
           graphics.beginLayer("world");
-          graphics.drawDebugLine(
+          graphics.drawLine(
             player.transform.x - 400,
             300,
             player.transform.x + 400,

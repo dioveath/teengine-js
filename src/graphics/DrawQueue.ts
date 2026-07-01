@@ -54,6 +54,21 @@ export function resolveDrawOptions(
   };
 }
 
+export type ShapeOptions = {
+  z?: number;
+};
+
+export function resolveShapeZ(
+  y: number,
+  height: number,
+  sortMode: "y" | "z" | "none",
+  z?: number,
+): number {
+  if (z !== undefined) return z;
+  if (sortMode === "y") return y + height;
+  return y;
+}
+
 export type SpriteDrawCommand = {
   kind: "sprite";
   layer: string;
@@ -61,9 +76,10 @@ export type SpriteDrawCommand = {
   opts: ResolvedDrawOptions;
 };
 
-export type DebugRectCommand = {
-  kind: "debugRect";
+export type ShapeRectCommand = {
+  kind: "shapeRect";
   layer: string;
+  z: number;
   x: number;
   y: number;
   width: number;
@@ -71,9 +87,21 @@ export type DebugRectCommand = {
   color: Color;
 };
 
-export type DebugLineCommand = {
-  kind: "debugLine";
+export type ShapeCircleCommand = {
+  kind: "shapeCircle";
   layer: string;
+  z: number;
+  x: number;
+  y: number;
+  radius: number;
+  color: Color;
+  segments: number;
+};
+
+export type ShapeLineCommand = {
+  kind: "shapeLine";
+  layer: string;
+  z: number;
   x0: number;
   y0: number;
   x1: number;
@@ -82,7 +110,11 @@ export type DebugLineCommand = {
   color: Color;
 };
 
-export type DrawCommand = SpriteDrawCommand | DebugRectCommand | DebugLineCommand;
+export type DrawCommand =
+  | SpriteDrawCommand
+  | ShapeRectCommand
+  | ShapeCircleCommand
+  | ShapeLineCommand;
 
 export class DrawQueue {
   private commands: DrawCommand[] = [];
@@ -107,3 +139,8 @@ export class DrawQueue {
     this.commands = [];
   }
 }
+
+/** @deprecated Use ShapeRectCommand */
+export type DebugRectCommand = ShapeRectCommand;
+/** @deprecated Use ShapeLineCommand */
+export type DebugLineCommand = ShapeLineCommand;

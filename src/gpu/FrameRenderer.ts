@@ -1,16 +1,19 @@
 import { Color, Mat3 } from "../math/index.js";
 import type {
   DrawCommand,
+  ShapeCircleCommand,
+  ShapeLineCommand,
+  ShapeRectCommand,
   SpriteDrawCommand,
 } from "../graphics/DrawQueue.js";
 import type { LayerConfig } from "../graphics/LayerRegistry.js";
 import { WebGPUContext } from "./WebGPUContext.js";
-import { DebugBatcher } from "./DebugBatcher.js";
+import { ShapeBatcher } from "./ShapeBatcher.js";
 import { SpriteBatcher } from "./SpriteBatcher.js";
 
 export class FrameRenderer {
   readonly spriteBatcher: SpriteBatcher;
-  readonly debugBatcher: DebugBatcher;
+  readonly shapeBatcher: ShapeBatcher;
 
   private readonly gpu: WebGPUContext;
   private readonly viewProjection = Mat3.create();
@@ -18,17 +21,17 @@ export class FrameRenderer {
   private height = 1;
   private clearColor: Color = Color.hex("#0d1117");
 
-  private constructor(gpu: WebGPUContext, spriteBatcher: SpriteBatcher, debugBatcher: DebugBatcher) {
+  private constructor(gpu: WebGPUContext, spriteBatcher: SpriteBatcher, shapeBatcher: ShapeBatcher) {
     this.gpu = gpu;
     this.spriteBatcher = spriteBatcher;
-    this.debugBatcher = debugBatcher;
+    this.shapeBatcher = shapeBatcher;
   }
 
   static async create(gpu: WebGPUContext): Promise<FrameRenderer> {
     return new FrameRenderer(
       gpu,
       SpriteBatcher.create(gpu),
-      DebugBatcher.create(gpu),
+      ShapeBatcher.create(gpu),
     );
   }
 
@@ -82,21 +85,32 @@ export class FrameRenderer {
     layer.camera.getViewProjection(this.width, this.height, this.viewProjection);
 
     const sprites: SpriteDrawCommand[] = [];
-    this.debugBatcher.clear();
+    const shapes: Array<ShapeRectCommand | ShapeCircleCommand | ShapeLineCommand> = [];
 
     for (const cmd of commands) {
       if (cmd.kind === "sprite") {
         sprites.push(cmd);
-      } else if (cmd.kind === "debugRect") {
-        this.debugBatcher.addRect(cmd);
-      } else if (cmd.kind === "debugLine") {
-        this.debugBatcher.addLine(cmd);
+      } else {
+        shapes.push(cmd);
       }
     }
 
     this.sortSprites(sprites, layer.sort);
+    shapes.sort((a, b) => a.z - b.z);
+
     this.spriteBatcher.drawSorted(pass, sprites, this.viewProjection);
-    this.debugBatcher.draw(pass, this.viewProjection);
+
+    this.shapeBatcher.clear();
+    for (const shape of shapes) {
+      if (shape.kind === "shapeRect") {
+        this.shapeBatcher.addRect(shape);
+      } else if (shape.kind === "shapeCircle") {
+        this.shapeBatcher.addCircle(shape);
+      } else if (shape.kind === "shapeLine") {
+        this.shapeBatcher.addLine(shape);
+      }
+    }
+    this.shapeBatcher.draw(pass, this.viewProjection);
   }
 
   get viewport(): { width: number; height: number } {

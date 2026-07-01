@@ -6,5 +6,9 @@ export type {
   EntityId,
   SpawnConfig,
   SpriteComponent,
+  ShapeComponent,
+  ShapeRect,
+  ShapeCircle,
+  ShapeLine,
 } from "./Entity.js";
 export { World } from "./World.js";

@@ -18,4 +18,5 @@ export { createDemoAtlas } from "./assets/createDemoAtlas.js";
 export { WebGPUContext } from "./gpu/WebGPUContext.js";
 export { FrameRenderer } from "./gpu/FrameRenderer.js";
 export { World, Transform } from "./ecs/index.js";
-export type { Entity, EntityId, SpawnConfig, SpriteComponent } from "./ecs/index.js";
+export type { Entity, EntityId, SpawnConfig, SpriteComponent, ShapeComponent } from "./ecs/index.js";
+export type { ShapeRect, ShapeCircle, ShapeLine } from "./ecs/index.js";
