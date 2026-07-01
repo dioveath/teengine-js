@@ -33,12 +33,11 @@ Open http://localhost:5173 in a WebGPU-capable browser (Chrome 113+, Edge 113+).
 
 ## Roadmap
 
-- [x] WebGPU swapchain replacing Canvas 2D
-- [x] Basic Graphics API with batched shapes
-- [ ] Sprite / texture rendering
-- [ ] Entity component system
-- [ ] Rapier 2D physics integration
-- [ ] Port useful math from legacy `utils.js`
+- [x] WebGPU rendering with camera + layers
+- [x] Sprite batching (`drawSprite`, atlas regions)
+- [ ] JSON atlas loader
+- [ ] Entity system
+- [ ] Rapier 2D physics
 
 ## License
 

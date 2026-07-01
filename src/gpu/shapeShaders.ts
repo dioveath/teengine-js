@@ -1,6 +1,6 @@
-export const SHADER_SOURCE = /* wgsl */ `
+export const SHAPE_SHADER = /* wgsl */ `
 struct Globals {
-  projection: mat3x3<f32>,
+  viewProjection: mat3x3<f32>,
 };
 
 @group(0) @binding(0) var<uniform> globals: Globals;
@@ -18,7 +18,7 @@ struct VertexOutput {
 @vertex
 fn vs_main(input: VertexInput) -> VertexOutput {
   var out: VertexOutput;
-  let projected = globals.projection * vec3(input.position, 1.0);
+  let projected = globals.viewProjection * vec3(input.position, 1.0);
   out.position = vec4(projected.xy, 0.0, 1.0);
   out.color = input.color;
   return out;
@@ -30,18 +30,15 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 `;
 
-export type GpuPipelineBundle = {
+export type ShapePipeline = {
   pipeline: GPURenderPipeline;
   bindGroupLayout: GPUBindGroupLayout;
   uniformBuffer: GPUBuffer;
   bindGroup: GPUBindGroup;
 };
 
-export function createShapePipeline(
-  device: GPUDevice,
-  format: GPUTextureFormat,
-): GpuPipelineBundle {
-  const module = device.createShaderModule({ code: SHADER_SOURCE });
+export function createShapePipeline(device: GPUDevice, format: GPUTextureFormat): ShapePipeline {
+  const module = device.createShaderModule({ code: SHAPE_SHADER });
 
   const bindGroupLayout = device.createBindGroupLayout({
     entries: [
@@ -53,12 +50,8 @@ export function createShapePipeline(
     ],
   });
 
-  const pipelineLayout = device.createPipelineLayout({
-    bindGroupLayouts: [bindGroupLayout],
-  });
-
   const pipeline = device.createRenderPipeline({
-    layout: pipelineLayout,
+    layout: device.createPipelineLayout({ bindGroupLayouts: [bindGroupLayout] }),
     vertex: {
       module,
       entryPoint: "vs_main",
@@ -77,9 +70,7 @@ export function createShapePipeline(
       entryPoint: "fs_main",
       targets: [{ format }],
     },
-    primitive: {
-      topology: "triangle-list",
-    },
+    primitive: { topology: "triangle-list" },
   });
 
   const uniformBuffer = device.createBuffer({
@@ -95,26 +86,12 @@ export function createShapePipeline(
   return { pipeline, bindGroupLayout, uniformBuffer, bindGroup };
 }
 
-/** Upload a 3x3 matrix padded to 48 bytes for WGSL std140-style layout. */
-export function writeProjectionMatrix(
-  device: GPUDevice,
-  buffer: GPUBuffer,
-  matrix: Float32Array,
-): void {
+export function writeMat3Uniform(device: GPUDevice, buffer: GPUBuffer, matrix: Float32Array): void {
   const padded = new Float32Array(12);
   padded.set([
-    matrix[0],
-    matrix[1],
-    matrix[2],
-    0,
-    matrix[3],
-    matrix[4],
-    matrix[5],
-    0,
-    matrix[6],
-    matrix[7],
-    matrix[8],
-    0,
+    matrix[0], matrix[1], matrix[2], 0,
+    matrix[3], matrix[4], matrix[5], 0,
+    matrix[6], matrix[7], matrix[8], 0,
   ]);
   device.queue.writeBuffer(buffer, 0, padded);
 }
