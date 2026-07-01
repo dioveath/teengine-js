@@ -30,7 +30,6 @@ export type {
   CollisionComponent,
   CollisionResponse,
   RigidBodyComponent,
-  ColliderConfig,
   PlayerTag,
   CameraTargetTag,
   CoinTag,

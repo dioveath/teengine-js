@@ -11,7 +11,6 @@ export type {
   CollisionComponent,
   CollisionResponse,
   RigidBodyComponent,
-  ColliderConfig,
   ShapeRect,
   ShapeCircle,
   ShapeLine,

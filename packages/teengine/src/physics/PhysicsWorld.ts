@@ -116,11 +116,6 @@ export class PhysicsWorld {
     return bodyHandle;
   }
 
-  /** @deprecated Use {@link createPhysicsForEntity}. */
-  createBodyForEntity(entity: Entity): RigidBodyHandle {
-    return this.createPhysicsForEntity(entity);
-  }
-
   removeEntity(entityId: EntityId): void {
     const entry = this.entityPhysics.get(entityId);
     if (!entry) return;

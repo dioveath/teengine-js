@@ -9,9 +9,6 @@ export type ColliderShape =
   | { kind: "box"; width: number; height: number }
   | { kind: "ball"; radius: number };
 
-/** @deprecated Use {@link ColliderShape} */
-export type ColliderConfig = ColliderShape;
-
 export type ColliderComponent = {
   shape: ColliderShape;
   offset?: { x: number; y: number };
@@ -105,13 +102,6 @@ export type Entity = {
   spin?: SpinComponent;
 };
 
-/** Legacy spawn shape kept for migration from nested `rigidBody.collider`. */
-type LegacyRigidBodySpawn = RigidBodyComponent & {
-  collider?: ColliderShape;
-  friction?: number;
-  restitution?: number;
-};
-
 export type SpawnConfig = {
   name?: string;
   transform?: Partial<TransformData>;
@@ -119,7 +109,7 @@ export type SpawnConfig = {
   shape?: ShapeComponent;
   collider?: ColliderComponent;
   collision?: CollisionComponent;
-  rigidBody?: LegacyRigidBodySpawn;
+  rigidBody?: RigidBodyComponent;
   player?: PlayerTag;
   cameraTarget?: CameraTargetTag;
   coin?: CoinTag;
@@ -127,40 +117,22 @@ export type SpawnConfig = {
   spin?: SpinComponent;
 };
 
-function migrateLegacyPhysics(config: SpawnConfig): SpawnConfig {
-  const legacy = config.rigidBody;
-  if (!legacy?.collider || config.collider) {
-    return config;
-  }
-
-  const { collider: shape, friction, restitution, ...body } = legacy;
-
-  return {
-    ...config,
-    collider: { shape, friction, restitution },
-    collision: config.collision ?? { response: "solid" },
-    rigidBody: body,
-  };
-}
-
 export function createEntity(id: EntityId, config: SpawnConfig): Entity {
-  const migrated = migrateLegacyPhysics(config);
-
   return {
     id,
-    name: migrated.name ?? `Entity ${id}`,
+    name: config.name ?? `Entity ${id}`,
     active: true,
-    transform: Transform.create(migrated.transform),
-    sprite: migrated.sprite,
-    shape: migrated.shape,
-    collider: migrated.collider,
-    collision: migrated.collision,
-    rigidBody: migrated.rigidBody,
-    player: migrated.player,
-    cameraTarget: migrated.cameraTarget,
-    coin: migrated.coin,
-    collisionListener: migrated.collisionListener,
-    spin: migrated.spin,
+    transform: Transform.create(config.transform),
+    sprite: config.sprite,
+    shape: config.shape,
+    collider: config.collider,
+    collision: config.collision,
+    rigidBody: config.rigidBody,
+    player: config.player,
+    cameraTarget: config.cameraTarget,
+    coin: config.coin,
+    collisionListener: config.collisionListener,
+    spin: config.spin,
   };
 }
 

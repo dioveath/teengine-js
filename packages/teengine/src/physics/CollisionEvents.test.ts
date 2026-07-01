@@ -84,20 +84,4 @@ describe("Collision events", () => {
     bridge.unregister(a.id);
     bridge.unregister(b.id);
   });
-
-  it("migrates legacy rigidBody.collider spawn config", () => {
-    const entity = createEntity(99, {
-      rigidBody: {
-        type: "dynamic",
-        collider: { kind: "box", width: 16, height: 16 },
-        friction: 0.2,
-      },
-    });
-
-    expect(entity.collider?.shape).toEqual({ kind: "box", width: 16, height: 16 });
-    expect(entity.collider?.friction).toBe(0.2);
-    expect(entity.collision?.response).toBe("solid");
-    expect(entity.rigidBody?.type).toBe("dynamic");
-    expect((entity.rigidBody as { collider?: unknown }).collider).toBeUndefined();
-  });
 });
