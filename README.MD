@@ -15,9 +15,9 @@ Open http://localhost:5173 in a WebGPU-capable browser (Chrome 113+, Edge 113+).
 
 ## Project structure
 
-- `src/gpu/` — WebGPU device, renderer, WGSL shaders
-- `src/graphics/` — Canvas-style Graphics API (`fillRect`, `fillCircle`, transforms)
-- `src/engine/` — Game loop and resize handling
+- `src/ecs/` — World, Entity, Transform
+- `src/engine/` — Fixed timestep game loop
+- `src/graphics/` — Camera-first Graphics API (`drawSprite`, layers)
 - `src/math/` — Colors, matrices, helpers
 - `docs/ARCHITECTURE.md` — Engine design
 - `docs/PHYSICS.md` — Rapier 2D research & integration plan
@@ -35,8 +35,8 @@ Open http://localhost:5173 in a WebGPU-capable browser (Chrome 113+, Edge 113+).
 
 - [x] WebGPU rendering with camera + layers
 - [x] Sprite batching (`drawSprite`, atlas regions)
+- [x] Entity system + fixed timestep
 - [ ] JSON atlas loader
-- [ ] Entity system
 - [ ] Rapier 2D physics
 
 ## License
