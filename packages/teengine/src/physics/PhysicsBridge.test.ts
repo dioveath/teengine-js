@@ -28,10 +28,8 @@ describe("PhysicsBridge", () => {
   it("registers bodies on entity registration and removes them on unregister", () => {
     const entity = createEntity(1, {
       transform: { x: 10, y: 20 },
-      rigidBody: {
-        type: "dynamic",
-        collider: { kind: "box", width: 16, height: 16 },
-      },
+      collider: { shape: { kind: "box", width: 16, height: 16 } },
+      rigidBody: { type: "dynamic" },
     });
 
     bridge.register(entity);
@@ -44,10 +42,8 @@ describe("PhysicsBridge", () => {
   it("interpolates between previous and current transforms", () => {
     const entity = createEntity(2, {
       transform: { x: 0, y: 0 },
-      rigidBody: {
-        type: "dynamic",
-        collider: { kind: "box", width: 16, height: 16 },
-      },
+      collider: { shape: { kind: "box", width: 16, height: 16 } },
+      rigidBody: { type: "dynamic" },
     });
 
     bridge.register(entity);
@@ -120,10 +116,8 @@ describe("World physics pipeline", () => {
   it("simulates a dynamic entity falling under gravity", () => {
     const entityId = world.spawn({
       transform: { x: 100, y: 80 },
-      rigidBody: {
-        type: "dynamic",
-        collider: { kind: "box", width: 32, height: 32 },
-      },
+      collider: { shape: { kind: "box", width: 32, height: 32 } },
+      rigidBody: { type: "dynamic" },
     });
 
     for (let i = 0; i < 30; i++) {

@@ -1,16 +1,19 @@
 import type { Entity, EntityId } from "../ecs/Entity.js";
+import { hasPhysics, isSimulatedBody } from "../ecs/Entity.js";
 import { snapshotTransform, type TransformSnapshot } from "../ecs/interpolation.js";
 import type { Transform } from "../ecs/Transform.js";
+import type { CollisionEvent } from "./CollisionEvents.js";
 import type { PhysicsWorld, RigidBodyHandle } from "./PhysicsWorld.js";
 
 type BodyEntry = {
   handle: RigidBodyHandle;
   prev: TransformSnapshot;
+  simulates: boolean;
 };
 
 /**
  * Decouples Rapier runtime state from ECS components.
- * Handles body lifecycle, sync, and render interpolation.
+ * Handles body lifecycle, sync, interpolation, and collision events.
  */
 export class PhysicsBridge {
   private readonly bodies = new Map<EntityId, BodyEntry>();
@@ -18,9 +21,9 @@ export class PhysicsBridge {
 
   constructor(private readonly physics: PhysicsWorld) {}
 
-  /** Queue entity for body creation (handles spawn-before-bridge ordering). */
+  /** Queue entity for physics registration (handles spawn-before-bridge ordering). */
   register(entity: Entity): void {
-    if (!entity.rigidBody) return;
+    if (!hasPhysics(entity)) return;
     if (this.bodies.has(entity.id)) return;
 
     if (this.pending.some((e) => e.id === entity.id)) return;
@@ -29,9 +32,8 @@ export class PhysicsBridge {
   }
 
   unregister(entityId: EntityId): void {
-    const entry = this.bodies.get(entityId);
-    if (entry) {
-      this.physics.removeBody(entry.handle);
+    if (this.bodies.has(entityId)) {
+      this.physics.removeEntity(entityId);
       this.bodies.delete(entityId);
     }
     const idx = this.pending.findIndex((e) => e.id === entityId);
@@ -42,6 +44,11 @@ export class PhysicsBridge {
     return this.bodies.has(entityId);
   }
 
+  /** True when physics simulation drives this entity's transform. */
+  simulates(entityId: EntityId): boolean {
+    return this.bodies.get(entityId)?.simulates ?? false;
+  }
+
   getHandle(entityId: EntityId): RigidBodyHandle | undefined {
     return this.bodies.get(entityId)?.handle;
   }
@@ -49,6 +56,7 @@ export class PhysicsBridge {
   /** Snapshot transforms before physics step for interpolation. */
   snapshotPreviousTransforms(getTransform: (id: EntityId) => Transform | undefined): void {
     for (const [id, entry] of this.bodies) {
+      if (!entry.simulates) continue;
       const transform = getTransform(id);
       if (transform) {
         entry.prev = snapshotTransform(transform);
@@ -60,8 +68,15 @@ export class PhysicsBridge {
     this.physics.step(dt);
   }
 
+  /** Collision events from the most recent physics step. */
+  drainCollisionEvents(): readonly CollisionEvent[] {
+    return this.physics.drainCollisionEvents();
+  }
+
   syncToEntities(getEntity: (id: EntityId) => Entity | undefined): void {
     for (const [id, entry] of this.bodies) {
+      if (!entry.simulates) continue;
+
       const entity = getEntity(id);
       if (!entity) continue;
 
@@ -72,7 +87,6 @@ export class PhysicsBridge {
     }
   }
 
-  /** Interpolated transform for rendering dynamic bodies. */
   getInterpolatedTransform(
     entityId: EntityId,
     current: Transform,
@@ -80,7 +94,7 @@ export class PhysicsBridge {
     out: TransformSnapshot,
   ): TransformSnapshot {
     const entry = this.bodies.get(entityId);
-    if (!entry) {
+    if (!entry?.simulates) {
       const snap = snapshotTransform(current);
       out.x = snap.x;
       out.y = snap.y;
@@ -89,6 +103,7 @@ export class PhysicsBridge {
       out.scaleY = snap.scaleY;
       return out;
     }
+
     const snap = snapshotTransform(current);
     out.x = entry.prev.x + (snap.x - entry.prev.x) * alpha;
     out.y = entry.prev.y + (snap.y - entry.prev.y) * alpha;
@@ -133,10 +148,11 @@ export class PhysicsBridge {
         this.pending.splice(i, 1);
         continue;
       }
-      const handle = this.physics.createBodyForEntity(entity);
+      const handle = this.physics.createPhysicsForEntity(entity);
       this.bodies.set(entity.id, {
         handle,
         prev: snapshotTransform(entity.transform),
+        simulates: isSimulatedBody(entity),
       });
       this.pending.splice(i, 1);
     }

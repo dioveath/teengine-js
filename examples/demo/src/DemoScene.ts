@@ -1,10 +1,12 @@
 import type { DemoAtlas } from "teengine";
 import {
   CameraFollowSystem,
+  CollisionGroups,
   Color,
   createUiCamera,
   createWorldCamera,
   Layers,
+  layers,
   SpinSystem,
   World,
   WorldEntityRenderSystem,
@@ -12,6 +14,7 @@ import {
   type EntityId,
 } from "teengine";
 import type { PhysicsBridge } from "teengine";
+import { CoinPickupSystem } from "./CoinPickupSystem.js";
 import { DebugOverlaySystem } from "./DebugOverlaySystem.js";
 import { PlayerControllerSystem } from "./PlayerControllerSystem.js";
 
@@ -59,11 +62,13 @@ export function createDemoScene(
       color: Color.rgb(0.2, 0.25, 0.3, 0.15),
       segments: 48,
     },
+    collider: { shape: { kind: "box", width: PLAYER_SIZE, height: PLAYER_SIZE }, friction: 0.8, restitution: 0 },
+    collision: {
+      response: "solid",
+      layers: layers(CollisionGroups.PLAYER, CollisionGroups.PICKUP | CollisionGroups.GROUND | CollisionGroups.ENEMY),
+    },
     rigidBody: {
       type: "dynamic",
-      collider: { kind: "box", width: PLAYER_SIZE, height: PLAYER_SIZE },
-      friction: 0.8,
-      restitution: 0,
       lockRotation: true,
     },
     player: { _tag: "player" },
@@ -74,9 +79,13 @@ export function createDemoScene(
     name: "Enemy",
     transform: { x: 520, y: GROUND_Y - 16 },
     sprite: { region: atlas.enemy, layer: Layers.world },
+    collider: { shape: { kind: "box", width: 28, height: 28 } },
+    collision: {
+      response: "solid",
+      layers: layers(CollisionGroups.ENEMY, CollisionGroups.PLAYER | CollisionGroups.GROUND),
+    },
     rigidBody: {
       type: "dynamic",
-      collider: { kind: "box", width: 28, height: 28 },
       lockRotation: true,
     },
   });
@@ -85,6 +94,12 @@ export function createDemoScene(
     name: "Coin",
     transform: { x: 280, y: 260 },
     sprite: { region: atlas.coin, layer: Layers.world },
+    collider: { shape: { kind: "ball", radius: 12 } },
+    collision: {
+      response: "sensor",
+      layers: layers(CollisionGroups.PICKUP, CollisionGroups.PLAYER),
+    },
+    coin: { _tag: "coin" },
     spin: { speed: 2 },
   });
 
@@ -101,6 +116,7 @@ export function createDemoScene(
   });
 
   world.addFixedSystem(new PlayerControllerSystem());
+  world.addPostPhysicsSystem(new CoinPickupSystem());
   world.addFixedSystem(new SpinSystem());
   world.addRenderSystem(new CameraFollowSystem(worldCam));
   world.addRenderSystem(new WorldEntityRenderSystem(engine.graphics));

@@ -7,7 +7,7 @@ TeEngine uses [`@dimforge/rapier2d`](https://www.npmjs.com/package/@dimforge/rap
 ## Architecture
 
 ```
-Entity.rigidBody  →  PhysicsWorld.createBodyForEntity()
+Entity.collider + Entity.collision + Entity.rigidBody  →  PhysicsWorld.createPhysicsForEntity()
                               ↓
                         Rapier World (Y-up)
                               ↓
@@ -54,9 +54,9 @@ fixedUpdate: ({ dt, input }) => {
 | Field | Purpose |
 |-------|---------|
 | `type` | `dynamic`, `fixed`, `kinematicPosition` |
-| `collider` | `{ kind: "box", width, height }` or `{ kind: "ball", radius }` |
-| `handle` | Set automatically by `World.attachPhysics` / `spawn` |
-| `friction`, `restitution`, `lockRotation` | Passed to Rapier |
+| `lockRotation` | Passed to Rapier |
+
+Collider and collision policy live on separate components (`collider`, `collision`). See entity spawn examples below.
 
 ## Next phases
 

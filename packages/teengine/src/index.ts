@@ -25,10 +25,15 @@ export type {
   SpawnConfig,
   SpriteComponent,
   ShapeComponent,
+  ColliderShape,
+  ColliderComponent,
+  CollisionComponent,
+  CollisionResponse,
   RigidBodyComponent,
-  ColliderConfig,
   PlayerTag,
   CameraTargetTag,
+  CoinTag,
+  CollisionListenerTag,
   SpinComponent,
   FixedSystem,
   RenderSystem,
@@ -41,4 +46,12 @@ export { WorldEntityRenderSystem } from "./ecs/systems/EntityRenderSystem.js";
 export { Input, ActionMap } from "./input/index.js";
 export type { MousePosition } from "./input/index.js";
 export { PhysicsWorld, PhysicsBridge } from "./physics/index.js";
-export type { PhysicsWorldOptions, RigidBodyHandle } from "./physics/index.js";
+export type {
+  PhysicsWorldOptions,
+  RigidBodyHandle,
+  ColliderHandle,
+  CollisionEvent,
+  CollisionEventKind,
+  CollisionLayers,
+} from "./physics/index.js";
+export { CollisionGroups, COLLIDE_ALL, layers, toInteractionGroups } from "./physics/index.js";

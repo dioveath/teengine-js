@@ -80,5 +80,5 @@ packages/teengine/src/
 - [x] Render interpolation
 - [x] JSON atlas loader
 - [x] npm package layout
-- [ ] Collision events / sensors
+- [x] Collision events / sensors
 - [ ] Kinematic character controller
