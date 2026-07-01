@@ -93,5 +93,6 @@ legacy/         Original Canvas 2D prototype
 - [x] Camera2D + layers + draw queue
 - [x] Textured sprite batching
 - [x] Entity system + fixed timestep
+- [x] Input system (actions, keyboard, mouse world/screen)
 - [ ] JSON atlas loader (TexturePacker / Aseprite)
 - [ ] Rapier 2D physics

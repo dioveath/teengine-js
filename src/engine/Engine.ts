@@ -1,5 +1,6 @@
 import { WebGPUContext } from "../gpu/WebGPUContext.js";
 import { Graphics } from "../graphics/Graphics.js";
+import { Input } from "../input/Input.js";
 
 export const DEFAULT_FIXED_DT = 1 / 60;
 export const DEFAULT_MAX_FRAME_STEPS = 5;
@@ -14,10 +15,12 @@ export type FixedUpdateContext = {
   dt: number;
   tick: number;
   time: number;
+  input: Input;
 };
 
 export type RenderContext = {
   graphics: Graphics;
+  input: Input;
   time: number;
   dt: number;
   alpha: number;
@@ -33,6 +36,7 @@ export type GameLoopCallbacks = {
 
 export class Engine {
   readonly graphics: Graphics;
+  readonly input: Input;
   private readonly gpu: WebGPUContext;
   private readonly fixedDt: number;
   private readonly maxFrameSteps: number;
@@ -49,11 +53,13 @@ export class Engine {
   private constructor(
     gpu: WebGPUContext,
     graphics: Graphics,
+    input: Input,
     fixedDt: number,
     maxFrameSteps: number,
   ) {
     this.gpu = gpu;
     this.graphics = graphics;
+    this.input = input;
     this.fixedDt = fixedDt;
     this.maxFrameSteps = maxFrameSteps;
   }
@@ -61,9 +67,11 @@ export class Engine {
   static async create(options: EngineOptions): Promise<Engine> {
     const gpu = await WebGPUContext.create({ canvas: options.canvas });
     const graphics = await Graphics.create(gpu);
+    const input = new Input(options.canvas);
     const engine = new Engine(
       gpu,
       graphics,
+      input,
       options.fixedDt ?? DEFAULT_FIXED_DT,
       options.maxFrameSteps ?? DEFAULT_MAX_FRAME_STEPS,
     );
@@ -87,6 +95,7 @@ export class Engine {
     if (this.running) return;
     this.running = true;
     this.lastTime = performance.now();
+    this.input.focus();
 
     this.resizeObserver = new ResizeObserver(() => this.handleResize());
     this.resizeObserver.observe(this.gpu.canvas);
@@ -103,10 +112,12 @@ export class Engine {
         let steps = 0;
 
         while (this.fixedAccumulator >= this.fixedDt && steps < this.maxFrameSteps) {
+          this.input.beginFrame();
           this.loop.fixedUpdate({
             dt: this.fixedDt,
             tick: this.tick,
             time: this.simulationTime,
+            input: this.input,
           });
           this.simulationTime += this.fixedDt;
           this.fixedAccumulator -= this.fixedDt;
@@ -119,6 +130,7 @@ export class Engine {
 
         this.loop.render({
           graphics: this.graphics,
+          input: this.input,
           time: time / 1000,
           dt,
           alpha,
@@ -139,6 +151,7 @@ export class Engine {
     cancelAnimationFrame(this.animationFrame);
     this.resizeObserver?.disconnect();
     window.removeEventListener("resize", this.handleResizeBound);
+    this.input.destroy();
   }
 
   private handleResizeBound = (): void => {
