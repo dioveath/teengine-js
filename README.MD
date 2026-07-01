@@ -36,6 +36,7 @@ Open http://localhost:5173 in a WebGPU-capable browser (Chrome 113+, Edge 113+).
 - [x] WebGPU rendering with camera + layers
 - [x] Sprite batching (`drawSprite`, atlas regions)
 - [x] Entity system + fixed timestep
+- [x] Input system (keyboard actions + mouse)
 - [ ] JSON atlas loader
 - [ ] Rapier 2D physics
 

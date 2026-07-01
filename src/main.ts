@@ -3,6 +3,11 @@ import { createDemoAtlas } from "./assets/createDemoAtlas.js";
 import { World } from "./ecs/World.js";
 import { Color, createUiCamera, createWorldCamera } from "./graphics/Graphics.js";
 
+const MOVE_SPEED = 220;
+const GRAVITY = 900;
+const JUMP_SPEED = -380;
+const GROUND_Y = 300;
+
 async function main(): Promise<void> {
   const canvas = document.getElementById("canvas");
   if (!(canvas instanceof HTMLCanvasElement)) {
@@ -16,14 +21,23 @@ async function main(): Promise<void> {
     const atlas = createDemoAtlas(engine.device);
     const world = new World();
 
-    const worldCam = createWorldCamera(400, 300);
+    engine.input.bindAction("move_left", ["ArrowLeft", "KeyA"]);
+    engine.input.bindAction("move_right", ["ArrowRight", "KeyD"]);
+    engine.input.bindAction("move_up", ["ArrowUp", "KeyW"]);
+    engine.input.bindAction("move_down", ["ArrowDown", "KeyS"]);
+    engine.input.bindAction("jump", ["Space", "ArrowUp"]);
+
+    const worldCam = createWorldCamera(400, GROUND_Y);
     const uiCam = createUiCamera(canvas.width, canvas.height);
 
     engine.graphics.registerLayer("world", { camera: worldCam, sort: "y" });
     engine.graphics.registerLayer("ui", { camera: uiCam, sort: "z" });
 
+    let velocityY = 0;
+    let grounded = true;
+
     const playerId = world.spawn({
-      transform: { x: 400, y: 300 },
+      transform: { x: 400, y: GROUND_Y },
       sprite: { region: atlas.player, layer: "world" },
       shape: {
         kind: "circle",
@@ -31,11 +45,6 @@ async function main(): Promise<void> {
         radius: 140,
         color: Color.rgb(0.2, 0.25, 0.3, 0.15),
         segments: 48,
-      },
-      update: (entity, _dt, time) => {
-        entity.transform.x = 400 + Math.cos(time) * 120;
-        entity.transform.y = 300 + Math.sin(time * 1.3) * 80;
-        entity.transform.rotation = Math.sin(time) * 0.3;
       },
     });
 
@@ -63,10 +72,30 @@ async function main(): Promise<void> {
     });
 
     engine.setLoop({
-      fixedUpdate: ({ dt }) => {
+      fixedUpdate: ({ dt, input }) => {
+        const player = world.get(playerId);
+        if (player) {
+          const dx = input.actionAxis("move_left", "move_right");
+          player.transform.x += dx * MOVE_SPEED * dt;
+
+          if (input.actionPressed("jump") && grounded) {
+            velocityY = JUMP_SPEED;
+            grounded = false;
+          }
+
+          velocityY += GRAVITY * dt;
+          player.transform.y += velocityY * dt;
+
+          if (player.transform.y >= GROUND_Y) {
+            player.transform.y = GROUND_Y;
+            velocityY = 0;
+            grounded = true;
+          }
+        }
+
         world.update(dt);
       },
-      render: ({ graphics, width, height }) => {
+      render: ({ graphics, input, width, height }) => {
         uiCam.x = width * 0.5;
         uiCam.y = height * 0.5;
 
@@ -78,18 +107,16 @@ async function main(): Promise<void> {
         graphics.beginFrame(Color.hex("#0d1117"));
         world.render(graphics);
 
-        if (player) {
-          graphics.beginLayer("world");
-          graphics.drawLine(
-            player.transform.x - 400,
-            300,
-            player.transform.x + 400,
-            300,
-            1,
-            Color.rgb(0.2, 0.25, 0.3, 0.4),
-          );
-          graphics.endLayer();
+        graphics.beginLayer("world");
+        graphics.drawLine(0, GROUND_Y, 2000, GROUND_Y, 2, Color.rgb(0.2, 0.25, 0.3, 0.5));
+
+        if (input.isMouseInCanvas) {
+          const mouse = input.mouseWorld(worldCam, width, height);
+          graphics.drawCircle(mouse.x, mouse.y, 8, Color.rgb(0.88, 0.42, 0.52, 0.6), {
+            segments: 16,
+          });
         }
+        graphics.endLayer();
 
         graphics.endFrame();
       },

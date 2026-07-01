@@ -37,11 +37,20 @@ export type Mat3 = Float32Array;
 
 export const Mat3 = {
   create(): Mat3 {
-    const m = new Float32Array(9);
-    m[0] = 1;
-    m[4] = 1;
-    m[8] = 1;
-    return m;
+    return Mat3.identity(Mat3.create());
+  },
+
+  identity(out: Mat3): Mat3 {
+    out[0] = 1;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    out[4] = 1;
+    out[5] = 0;
+    out[6] = 0;
+    out[7] = 0;
+    out[8] = 1;
+    return out;
   },
 
   ortho(
@@ -126,6 +135,37 @@ export const Mat3 = {
   transformPoint(out: { x: number; y: number }, m: Mat3, x: number, y: number) {
     out.x = m[0] * x + m[3] * y + m[6];
     out.y = m[1] * x + m[4] * y + m[7];
+  },
+
+  invert(out: Mat3, m: Mat3): boolean {
+    const a00 = m[0];
+    const a01 = m[3];
+    const a02 = m[6];
+    const a10 = m[1];
+    const a11 = m[4];
+    const a12 = m[7];
+    const a20 = m[2];
+    const a21 = m[5];
+    const a22 = m[8];
+
+    const b01 = a22 * a11 - a12 * a21;
+    const b11 = -a22 * a10 + a12 * a20;
+    const b21 = a21 * a10 - a11 * a20;
+
+    const det = a00 * b01 + a01 * b11 + a02 * b21;
+    if (Math.abs(det) < 1e-10) return false;
+
+    const invDet = 1 / det;
+    out[0] = b01 * invDet;
+    out[1] = (-a22 * a01 + a02 * a21) * invDet;
+    out[2] = (a12 * a01 - a02 * a11) * invDet;
+    out[3] = b11 * invDet;
+    out[4] = (a22 * a00 - a02 * a20) * invDet;
+    out[5] = (-a12 * a00 + a02 * a10) * invDet;
+    out[6] = b21 * invDet;
+    out[7] = (-a21 * a00 + a01 * a20) * invDet;
+    out[8] = (a11 * a00 - a01 * a10) * invDet;
+    return true;
   },
 };
 
