@@ -6,7 +6,9 @@ import { Camera2D, createUiCamera } from "./Camera2D.js";
 import {
   DrawQueue,
   resolveDrawOptions,
+  resolveShapeZ,
   type DrawOptions,
+  type ShapeOptions,
 } from "./DrawQueue.js";
 import { LayerRegistry, type LayerSortMode } from "./LayerRegistry.js";
 
@@ -39,7 +41,6 @@ export class Graphics {
     return new Graphics(frameRenderer, layers, uiCamera);
   }
 
-  /** Must be called before beginLayer(). */
   registerLayer(name: string, options: RegisterLayerOptions): void {
     this.layers.register(name, {
       camera: options.camera,
@@ -47,7 +48,6 @@ export class Graphics {
     });
   }
 
-  /** Update UI camera center when the viewport resizes. */
   resize(width: number, height: number): void {
     this.frameRenderer.resize(width, height);
     this.uiCamera.x = width * 0.5;
@@ -70,11 +70,8 @@ export class Graphics {
   }
 
   drawSprite(region: AtlasRegion, opts: DrawOptions): void {
-    if (!this.currentLayer) {
-      throw new Error("drawSprite() called outside of beginLayer()/endLayer().");
-    }
-
-    const layer = this.layers.get(this.currentLayer);
+    const layerName = this.requireLayer("drawSprite");
+    const layer = this.layers.get(layerName);
     this.frameRenderer.spriteBatcher.registerTexture(
       region.texture.texture,
       region.texture.view,
@@ -83,19 +80,26 @@ export class Graphics {
 
     this.queue.push({
       kind: "sprite",
-      layer: this.currentLayer,
+      layer: layerName,
       region,
       opts: resolveDrawOptions(region, opts, layer.sort),
     });
   }
 
-  drawDebugRect(x: number, y: number, width: number, height: number, color: Color): void {
-    if (!this.currentLayer) {
-      throw new Error("drawDebugRect() called outside of beginLayer()/endLayer().");
-    }
+  drawRect(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    color: Color,
+    options: ShapeOptions = {},
+  ): void {
+    const layerName = this.requireLayer("drawRect");
+    const layer = this.layers.get(layerName);
     this.queue.push({
-      kind: "debugRect",
-      layer: this.currentLayer,
+      kind: "shapeRect",
+      layer: layerName,
+      z: resolveShapeZ(y, height, layer.sort, options.z),
       x,
       y,
       width,
@@ -104,6 +108,58 @@ export class Graphics {
     });
   }
 
+  drawCircle(
+    cx: number,
+    cy: number,
+    radius: number,
+    color: Color,
+    options: ShapeOptions & { segments?: number } = {},
+  ): void {
+    const layerName = this.requireLayer("drawCircle");
+    const layer = this.layers.get(layerName);
+    this.queue.push({
+      kind: "shapeCircle",
+      layer: layerName,
+      z: resolveShapeZ(cy, radius * 2, layer.sort, options.z),
+      x: cx,
+      y: cy,
+      radius,
+      color,
+      segments: options.segments ?? 32,
+    });
+  }
+
+  drawLine(
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    width: number,
+    color: Color,
+    options: ShapeOptions = {},
+  ): void {
+    const layerName = this.requireLayer("drawLine");
+    const layer = this.layers.get(layerName);
+    const sortY = Math.max(y0, y1);
+    this.queue.push({
+      kind: "shapeLine",
+      layer: layerName,
+      z: resolveShapeZ(sortY, width, layer.sort, options.z),
+      x0,
+      y0,
+      x1,
+      y1,
+      width,
+      color,
+    });
+  }
+
+  /** @deprecated Use drawRect() */
+  drawDebugRect(x: number, y: number, width: number, height: number, color: Color): void {
+    this.drawRect(x, y, width, height, color);
+  }
+
+  /** @deprecated Use drawLine() */
   drawDebugLine(
     x0: number,
     y0: number,
@@ -112,19 +168,7 @@ export class Graphics {
     width: number,
     color: Color,
   ): void {
-    if (!this.currentLayer) {
-      throw new Error("drawDebugLine() called outside of beginLayer()/endLayer().");
-    }
-    this.queue.push({
-      kind: "debugLine",
-      layer: this.currentLayer,
-      x0,
-      y0,
-      x1,
-      y1,
-      width,
-      color,
-    });
+    this.drawLine(x0, y0, x1, y1, width, color);
   }
 
   endFrame(): void {
@@ -140,9 +184,15 @@ export class Graphics {
     return this.frameRenderer.viewport;
   }
 
-  /** Helper to configure the standard UI layer camera after registerLayer("ui", ...). */
   getUiCamera(): Camera2D {
     return this.uiCamera;
+  }
+
+  private requireLayer(caller: string): string {
+    if (!this.currentLayer) {
+      throw new Error(`${caller}() called outside of beginLayer()/endLayer().`);
+    }
+    return this.currentLayer;
   }
 }
 
@@ -150,3 +200,4 @@ export { Camera2D, createUiCamera } from "./Camera2D.js";
 export { createWorldCamera } from "./Camera2D.js";
 export { Color } from "../math/index.js";
 export type { LayerSortMode } from "./LayerRegistry.js";
+export type { ShapeOptions } from "./DrawQueue.js";

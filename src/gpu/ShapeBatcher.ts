@@ -1,12 +1,16 @@
 import { Color, Mat3 } from "../math/index.js";
-import type { DebugLineCommand, DebugRectCommand } from "../graphics/DrawQueue.js";
+import type {
+  ShapeCircleCommand,
+  ShapeLineCommand,
+  ShapeRectCommand,
+} from "../graphics/DrawQueue.js";
 import { WebGPUContext } from "./WebGPUContext.js";
 import { createShapePipeline, writeMat3Uniform, type ShapePipeline } from "./shapeShaders.js";
 
 const MAX_VERTICES = 65_536;
 const FLOATS_PER_VERTEX = 6;
 
-export class DebugBatcher {
+export class ShapeBatcher {
   private readonly gpu: WebGPUContext;
   private readonly pipeline: ShapePipeline;
   private readonly vertexBuffer: GPUBuffer;
@@ -18,25 +22,48 @@ export class DebugBatcher {
     this.vertexBuffer = vertexBuffer;
   }
 
-  static create(gpu: WebGPUContext): DebugBatcher {
+  static create(gpu: WebGPUContext): ShapeBatcher {
     const pipeline = createShapePipeline(gpu.device, gpu.format);
     const vertexBuffer = gpu.device.createBuffer({
       size: MAX_VERTICES * FLOATS_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
     });
-    return new DebugBatcher(gpu, pipeline, vertexBuffer);
+    return new ShapeBatcher(gpu, pipeline, vertexBuffer);
   }
 
   clear(): void {
     this.vertices = [];
   }
 
-  addRect(cmd: DebugRectCommand): void {
+  addRect(cmd: ShapeRectCommand): void {
     const { x, y, width, height, color } = cmd;
     this.pushQuad(x, y, x + width, y, x + width, y + height, x, y + height, color);
   }
 
-  addLine(cmd: DebugLineCommand): void {
+  addCircle(cmd: ShapeCircleCommand): void {
+    const { x, y, radius, color, segments } = cmd;
+    const [r, g, b, a] = Color.toVec4(color);
+
+    for (let i = 0; i < segments; i++) {
+      const t0 = (i / segments) * Math.PI * 2;
+      const t1 = ((i + 1) / segments) * Math.PI * 2;
+      this.vertices.push(x, y, r, g, b, a);
+      this.vertices.push(
+        x + Math.cos(t0) * radius,
+        y + Math.sin(t0) * radius,
+        r, g, b, a,
+      );
+      this.vertices.push(
+        x + Math.cos(t1) * radius,
+        y + Math.sin(t1) * radius,
+        r, g, b, a,
+      );
+    }
+
+    this.checkOverflow();
+  }
+
+  addLine(cmd: ShapeLineCommand): void {
     const { x0, y0, x1, y1, width, color } = cmd;
     const dx = x1 - x0;
     const dy = y1 - y0;
@@ -82,8 +109,15 @@ export class DebugBatcher {
       x2, y2, r, g, b, a,
       x3, y3, r, g, b, a,
     );
+    this.checkOverflow();
+  }
+
+  private checkOverflow(): void {
     if (this.vertices.length / FLOATS_PER_VERTEX > MAX_VERTICES) {
-      throw new Error("Debug vertex buffer overflow.");
+      throw new Error("Shape vertex buffer overflow.");
     }
   }
 }
+
+/** @deprecated Use ShapeBatcher */
+export const DebugBatcher = ShapeBatcher;

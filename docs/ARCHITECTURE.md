@@ -7,6 +7,10 @@ TeEngine is a **simple 2D TypeScript game engine** with **WebGPU** rendering.
 ```
 Game code (main.ts)
     ↓
+World                 entities, fixed update, render → Graphics
+    ↓
+Engine                fixed timestep (1/60s) + render loop
+    ↓
 Graphics API          cameras, layers, drawSprite, debug draws
     ↓
 DrawQueue             collects commands per frame
@@ -17,6 +21,22 @@ FrameRenderer         sorts per layer, submits GPU passes
     ↓
 WebGPUContext
 ```
+
+## Game loop
+
+```ts
+engine.setLoop({
+  fixedUpdate: ({ dt, tick, time }) => {
+    world.update(dt); // always 1/60s
+  },
+  render: ({ graphics, alpha, width, height }) => {
+    world.render(graphics);
+    graphics.endFrame();
+  },
+});
+```
+
+Simulation runs at a fixed **60 Hz** with spiral-of-death protection (`maxFrameSteps = 5`). Rendering runs every frame; `alpha` is available for interpolation later.
 
 ## Graphics API
 
@@ -55,7 +75,8 @@ npm run build
 
 ```
 src/
-  engine/       Game loop
+  engine/       Fixed timestep game loop
+  ecs/          World, Entity, Transform
   graphics/     Graphics, Camera2D, DrawQueue, LayerRegistry
   gpu/          WebGPU, SpriteBatcher, DebugBatcher, FrameRenderer
   assets/       Atlas types, texture loading, demo atlas
@@ -71,6 +92,6 @@ legacy/         Original Canvas 2D prototype
 - [x] WebGPU swapchain
 - [x] Camera2D + layers + draw queue
 - [x] Textured sprite batching
+- [x] Entity system + fixed timestep
 - [ ] JSON atlas loader (TexturePacker / Aseprite)
-- [ ] Entity system + fixed timestep
 - [ ] Rapier 2D physics
