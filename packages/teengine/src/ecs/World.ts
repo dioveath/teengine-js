@@ -1,7 +1,7 @@
 import type { LayerSortMode } from "../graphics/LayerRegistry.js";
 import type { PhysicsBridge } from "../physics/PhysicsBridge.js";
 import type { TransformSnapshot } from "./interpolation.js";
-import { createEntity, type Entity, type EntityId, type SpawnConfig } from "./Entity.js";
+import { createEntity, hasPhysics, type Entity, type EntityId, type SpawnConfig } from "./Entity.js";
 import type { FixedSystem, RenderSystem } from "./System.js";
 
 type LayerBucket = {
@@ -12,6 +12,7 @@ type LayerBucket = {
 export class World {
   private readonly entities = new Map<EntityId, Entity>();
   private readonly fixedSystems: FixedSystem[] = [];
+  private readonly postPhysicsSystems: FixedSystem[] = [];
   private readonly renderSystems: RenderSystem[] = [];
   private readonly scratchTransform: TransformSnapshot = {
     x: 0,
@@ -33,6 +34,11 @@ export class World {
     this.fixedSystems.push(system);
   }
 
+  /** Runs after physics step + sync (collision events, triggers). */
+  addPostPhysicsSystem(system: FixedSystem): void {
+    this.postPhysicsSystems.push(system);
+  }
+
   addRenderSystem(system: RenderSystem): void {
     this.renderSystems.push(system);
   }
@@ -42,7 +48,7 @@ export class World {
     const entity = createEntity(id, config);
     this.entities.set(id, entity);
 
-    if (entity.rigidBody && this.physics) {
+    if (hasPhysics(entity) && this.physics) {
       this.physics.register(entity);
     }
 
@@ -76,6 +82,10 @@ export class World {
 
     this.physics?.step(ctx.dt);
     this.physics?.syncToEntities((id) => this.entities.get(id));
+
+    for (const system of this.postPhysicsSystems) {
+      system.fixedUpdate(fullCtx);
+    }
   }
 
   render(ctx: Omit<import("./System.js").RenderSystemContext, "world">): void {
@@ -116,7 +126,7 @@ export class World {
 
   /** Interpolated transform for rendering (physics bodies lerp between ticks). */
   getRenderTransform(entity: Entity, alpha: number): TransformSnapshot {
-    if (this.physics?.hasBody(entity.id)) {
+    if (this.physics?.simulates(entity.id)) {
       return this.physics.getInterpolatedTransform(
         entity.id,
         entity.transform,
