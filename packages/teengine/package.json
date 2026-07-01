@@ -15,19 +15,32 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "sideEffects": false,
   "scripts": {
     "build": "tsup",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@dimforge/rapier2d": "^0.19.3"
   },
   "devDependencies": {
     "@webgpu/types": "^0.1.60",
+    "happy-dom": "^17.4.4",
     "tsup": "^8.5.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vite-plugin-top-level-await": "^1.6.0",
+    "vite-plugin-wasm": "^3.6.0",
+    "vitest": "^3.2.4"
   },
-  "keywords": ["game-engine", "webgpu", "2d", "typescript", "rapier"]
+  "keywords": [
+    "game-engine",
+    "webgpu",
+    "2d",
+    "typescript",
+    "rapier"
+  ]
 }

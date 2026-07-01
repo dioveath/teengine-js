@@ -37,7 +37,8 @@ export type Mat3 = Float32Array;
 
 export const Mat3 = {
   create(): Mat3 {
-    return Mat3.identity(Mat3.create());
+    const out = new Float32Array(9);
+    return Mat3.identity(out);
   },
 
   identity(out: Mat3): Mat3 {
@@ -95,15 +96,22 @@ export const Mat3 = {
     const b21 = b[7];
     const b22 = b[8];
 
-    out[0] = b00 * a00 + b01 * a10 + b02 * a20;
-    out[1] = b00 * a01 + b01 * a11 + b02 * a21;
-    out[2] = b00 * a02 + b01 * a12 + b02 * a22;
-    out[3] = b10 * a00 + b11 * a10 + b12 * a20;
-    out[4] = b10 * a01 + b11 * a11 + b12 * a21;
-    out[5] = b10 * a02 + b11 * a12 + b12 * a22;
-    out[6] = b20 * a00 + b21 * a10 + b22 * a20;
-    out[7] = b20 * a01 + b21 * a11 + b22 * a21;
-    out[8] = b20 * a02 + b21 * a12 + b22 * a22;
+    const result = out === a || out === b ? new Float32Array(9) : out;
+
+    result[0] = b00 * a00 + b01 * a10 + b02 * a20;
+    result[1] = b00 * a01 + b01 * a11 + b02 * a21;
+    result[2] = b00 * a02 + b01 * a12 + b02 * a22;
+    result[3] = b10 * a00 + b11 * a10 + b12 * a20;
+    result[4] = b10 * a01 + b11 * a11 + b12 * a21;
+    result[5] = b10 * a02 + b11 * a12 + b12 * a22;
+    result[6] = b20 * a00 + b21 * a10 + b22 * a20;
+    result[7] = b20 * a01 + b21 * a11 + b22 * a21;
+    result[8] = b20 * a02 + b21 * a12 + b22 * a22;
+
+    if (result !== out) {
+      out.set(result);
+    }
+
     return out;
   },
 
@@ -138,33 +146,31 @@ export const Mat3 = {
   },
 
   invert(out: Mat3, m: Mat3): boolean {
-    const a00 = m[0];
-    const a01 = m[3];
-    const a02 = m[6];
-    const a10 = m[1];
-    const a11 = m[4];
-    const a12 = m[7];
-    const a20 = m[2];
-    const a21 = m[5];
-    const a22 = m[8];
+    const a = m[0];
+    const b = m[1];
+    const c = m[3];
+    const d = m[4];
+    const tx = m[6];
+    const ty = m[7];
 
-    const b01 = a22 * a11 - a12 * a21;
-    const b11 = -a22 * a10 + a12 * a20;
-    const b21 = a21 * a10 - a11 * a20;
-
-    const det = a00 * b01 + a01 * b11 + a02 * b21;
+    const det = a * d - b * c;
     if (Math.abs(det) < 1e-10) return false;
 
     const invDet = 1 / det;
-    out[0] = b01 * invDet;
-    out[1] = (-a22 * a01 + a02 * a21) * invDet;
-    out[2] = (a12 * a01 - a02 * a11) * invDet;
-    out[3] = b11 * invDet;
-    out[4] = (a22 * a00 - a02 * a20) * invDet;
-    out[5] = (-a12 * a00 + a02 * a10) * invDet;
-    out[6] = b21 * invDet;
-    out[7] = (-a21 * a00 + a01 * a20) * invDet;
-    out[8] = (a11 * a00 - a01 * a10) * invDet;
+    const ia = d * invDet;
+    const ib = -b * invDet;
+    const ic = -c * invDet;
+    const id = a * invDet;
+
+    out[0] = ia;
+    out[1] = ib;
+    out[2] = 0;
+    out[3] = ic;
+    out[4] = id;
+    out[5] = 0;
+    out[6] = -(ia * tx + ic * ty);
+    out[7] = -(ib * tx + id * ty);
+    out[8] = 1;
     return true;
   },
 };

@@ -1,6 +1,12 @@
 import { WebGPUContext } from "../gpu/WebGPUContext.js";
 import { Graphics } from "../graphics/Graphics.js";
 import { Input } from "../input/Input.js";
+import {
+  clampFrameDt,
+  createFixedTimestepState,
+  runFixedTimestep,
+  type FixedTimestepState,
+} from "./FixedTimestep.js";
 
 export const DEFAULT_FIXED_DT = 1 / 60;
 export const DEFAULT_MAX_FRAME_STEPS = 5;
@@ -44,9 +50,7 @@ export class Engine {
   private running = false;
   private paused = false;
   private lastTime = 0;
-  private fixedAccumulator = 0;
-  private tick = 0;
-  private simulationTime = 0;
+  private timestepState: FixedTimestepState = createFixedTimestepState();
   private animationFrame = 0;
   private loop: GameLoopCallbacks | null = null;
   private resizeObserver: ResizeObserver | null = null;
@@ -113,31 +117,28 @@ export class Engine {
     const loop = (time: number) => {
       if (!this.running) return;
 
-      const dt = Math.min((time - this.lastTime) / 1000, 0.25);
+      const dt = clampFrameDt((time - this.lastTime) / 1000);
       this.lastTime = time;
 
       if (this.loop) {
         this.input.beginFrame();
 
-        if (!this.paused) {
-          this.fixedAccumulator += dt;
-          let steps = 0;
-
-          while (this.fixedAccumulator >= this.fixedDt && steps < this.maxFrameSteps) {
-            this.loop.fixedUpdate({
-              dt: this.fixedDt,
-              tick: this.tick,
-              time: this.simulationTime,
+        const { state, alpha } = runFixedTimestep(
+          this.timestepState,
+          dt,
+          { fixedDt: this.fixedDt, maxFrameSteps: this.maxFrameSteps },
+          this.paused,
+          (step) => {
+            this.loop!.fixedUpdate({
+              dt: step.dt,
+              tick: step.tick,
+              time: step.time,
               input: this.input,
             });
-            this.simulationTime += this.fixedDt;
-            this.fixedAccumulator -= this.fixedDt;
-            this.tick += 1;
-            steps += 1;
-          }
-        }
+          },
+        );
+        this.timestepState = state;
 
-        const alpha = this.fixedAccumulator / this.fixedDt;
         const { width, height } = this.graphics.viewport;
 
         this.loop.render({
@@ -148,7 +149,7 @@ export class Engine {
           alpha,
           width,
           height,
-          tick: this.tick,
+          tick: state.tick,
         });
       }
 
