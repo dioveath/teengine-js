@@ -81,7 +81,13 @@ export class PhysicsBridge {
   ): TransformSnapshot {
     const entry = this.bodies.get(entityId);
     if (!entry) {
-      return snapshotTransform(current);
+      const snap = snapshotTransform(current);
+      out.x = snap.x;
+      out.y = snap.y;
+      out.rotation = snap.rotation;
+      out.scaleX = snap.scaleX;
+      out.scaleY = snap.scaleY;
+      return out;
     }
     const snap = snapshotTransform(current);
     out.x = entry.prev.x + (snap.x - entry.prev.x) * alpha;
