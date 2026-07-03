@@ -21,13 +21,16 @@ export const COLLIDE_ALL: CollisionLayers = {
   mask: 0xffff,
 };
 
-/** Preset layer bits — compose with bitwise OR. */
+/**
+ * Preset layer bits — compose with bitwise OR.
+ * Each preset is a distinct bit; do not reuse a bit across presets.
+ */
 export const CollisionGroups = {
   DEFAULT: 1 << 0,
-  PLAYER: 1 << 0,
-  PICKUP: 1 << 1,
-  GROUND: 1 << 2,
-  ENEMY: 1 << 3,
+  PLAYER: 1 << 1,
+  PICKUP: 1 << 2,
+  GROUND: 1 << 3,
+  ENEMY: 1 << 4,
 } as const;
 
 export function layers(
