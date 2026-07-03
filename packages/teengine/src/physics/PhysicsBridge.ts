@@ -80,7 +80,10 @@ export class PhysicsBridge {
       const entity = getEntity(id);
       if (!entity) continue;
 
-      const t = this.physics.getTransform(entry.handle);
+      // Uses the entity-aware lookup (not `getTransform(entry.handle)`) so any
+      // `collider.offset` baked into the body's translation is subtracted back out.
+      const t = this.physics.getTransformForEntity(id);
+      if (!t) continue;
       entity.transform.x = t.x;
       entity.transform.y = t.y;
       entity.transform.rotation = t.rotation;
