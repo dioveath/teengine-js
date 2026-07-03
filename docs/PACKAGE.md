@@ -49,15 +49,24 @@ Single entry point today:
 import {
   Engine,
   World,
-  Graphics,
   PhysicsBridge,
   PhysicsWorld,
   Layers,
+  layers,
   loadAtlasFromJson,
-  SpinSystem,
+  uploadRgbaTexture,
   CameraFollowSystem,
   WorldEntityRenderSystem,
 } from "teengine";
+
+// Tags and collision layer bits are game-defined — see examples/demo/src/demoConstants.ts
+world.spawn({
+  tags: ["player"],
+  collision: { response: "solid", layers: layers(MY_PLAYER_LAYER, MY_GROUND_LAYER) },
+});
+
+const atlas = await loadAtlasFromJson(engine, "/assets/sprites.json");
+const procedural = uploadRgbaTexture(engine, pixels, width, height);
 ```
 
 Single entry point. No subpath exports unless the core API genuinely outgrows one bundle.

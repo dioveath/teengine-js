@@ -25,8 +25,9 @@ These are the only subsystems. If it does not fit here, it does not ship in the 
 
 - Create bodies: `dynamic`, `fixed`, `kinematicPosition`
 - Set velocity, apply impulse, step the world
-- Collision layers, enter/exit events, sensors
-- Engine Y-down ↔ Rapier Y-up handled for you
+- Collision layers (`layers()`, `COLLIDE_ALL`) — you define your own bit constants
+- Enter/exit events, sensors
+- Engine Y-down ↔ Rapier Y-up handled for you (not exported)
 
 That is enough to build **any** movement style — platformer, top-down, vehicle, point-and-click — in your own systems. The engine does not pick one.
 
@@ -40,7 +41,21 @@ That is enough to build **any** movement style — platformer, top-down, vehicle
 | Tilemaps | Content format + renderer. Add when a game needs it. |
 | Audio | Separate concern. |
 | UI / text | Use DOM or your UI library. |
-| `PlayerTag`, `CoinTag`, etc. | Demo concepts — [being removed from core types](#cleanup) |
+| Game-specific tags / atlas shapes | Demo defines its own in `examples/demo/` |
+
+---
+
+## Public API (`teengine`)
+
+Single entry point — `packages/teengine/src/index.ts` is the only contract:
+
+- **Run:** `Engine`, loop callbacks, fixed timestep constants
+- **Draw:** `Graphics`, `Camera2D`, `Layers`, `Color`, shape/sprite draw types
+- **Simulate:** `World`, `Entity`, `Transform`, `hasPhysics`, `isSimulatedBody`, physics bridge + collision helpers
+- **Input:** `Input`, `ActionMap`
+- **Assets:** `loadAtlasFromJson(engine, …)`, `uploadRgbaTexture(engine, …)`, `AtlasRegion`
+
+Not exported: GPU device accessor, coordinate conversion helpers, demo-specific types, preset collision group names.
 
 ---
 
@@ -50,14 +65,13 @@ Reference games and **copy-paste starting points** — not second-class engine m
 
 ```
 examples/demo/
+  demoConstants.ts            ← DemoTags, DemoAtlas, DemoCollisionGroups
   PlayerControllerSystem.ts   ← velocity + jump: one way to move a dynamic body
   CoinPickupSystem.ts         ← sensor collision handling
   DemoScene.ts                ← how to wire engine + world + systems
 ```
 
 A default working player controller belongs **here** (or in docs as a snippet), so developers can read it, fork it, or ignore it. It is never imported from `"teengine"`.
-
-If we later publish recipes, they live as **examples or a separate repo** — not inside the engine package.
 
 ---
 
@@ -82,24 +96,16 @@ When unsure, leave it out. The engine stays smaller; games stay flexible.
 
 ---
 
-## Cleanup
-
-Core entity types currently include demo markers (`PlayerTag`, `CoinTag`) that violate the boundary above. These will move to `examples/demo` (or become generic tags the game defines). The engine exposes **components and hooks**, not **roles in a specific game**.
-
----
-
 ## Roadmap (engine only)
 
-Work that makes the engine **simpler or more complete as a 2D foundation** — not game features.
-
-| Item | Rationale |
-|------|-----------|
-| Remove demo tags from `Entity` | Stop leaking example concepts into public types |
-| ECS query helpers | Less `getAll()` + manual filtering in every system |
-| Export `Vec2` / small math helpers | Shared primitives, not gameplay |
-| Asset cache / lifecycle | Load once, release GPU resources cleanly |
-| Physics perf (buffer reuse) | Engine quality, not new API surface |
-| Docs: "building movement" guide | Point to example systems; document kinematic vs dynamic |
+| Item | Status |
+|------|--------|
+| Remove demo tags from `Entity` | ✅ `tags: Set<string>` |
+| Seal public API | ✅ Phase 2 |
+| ECS query helpers | Planned |
+| Export `Vec2` / small math helpers | Planned |
+| Asset cache / lifecycle | Planned |
+| Physics perf (buffer reuse) | Planned |
 
 **Not on engine roadmap:** character controller, animation module, scene stack, tilemaps.
 

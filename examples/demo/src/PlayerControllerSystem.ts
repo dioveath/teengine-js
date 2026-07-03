@@ -1,4 +1,5 @@
-import type { FixedSystem } from "teengine";
+import type { FixedSystem, FixedSystemContext } from "teengine";
+import { DemoTags } from "./demoConstants.js";
 
 const MOVE_SPEED = 220;
 const JUMP_IMPULSE = 280;
@@ -6,12 +7,12 @@ const JUMP_IMPULSE = 280;
 export class PlayerControllerSystem implements FixedSystem {
   readonly name = "PlayerControllerSystem";
 
-  fixedUpdate(ctx: import("teengine").FixedSystemContext): void {
+  fixedUpdate(ctx: FixedSystemContext): void {
     const { world, input, physics } = ctx;
     if (!physics) return;
 
     for (const entity of world.getAll()) {
-      if (!entity.active || !entity.player || !entity.rigidBody) continue;
+      if (!entity.active || !entity.tags.has(DemoTags.player) || !entity.rigidBody) continue;
 
       const dx = input.actionAxis("move_left", "move_right");
       const vel = physics.getLinearVelocity(entity.id);

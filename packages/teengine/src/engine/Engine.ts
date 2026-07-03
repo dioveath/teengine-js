@@ -96,7 +96,8 @@ export class Engine {
     return this.paused;
   }
 
-  get device(): GPUDevice {
+  /** @internal Used by asset upload helpers in this package. */
+  getGpuDevice(): GPUDevice {
     return this.gpu.device;
   }
 

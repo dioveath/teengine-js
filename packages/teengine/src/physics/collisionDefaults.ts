@@ -34,13 +34,7 @@ export function resolveCollision(entity: Entity): ResolvedCollision | null {
  *
  * Rapier only queues collision events for a collider whose resolved `emitEvents`
  * is true in the first place (see `PhysicsWorld.createPhysicsForEntity`), so once
- * that guard passes, the entity is always the `self` side — whether it's a sensor
- * or a solid with `collision.emitEvents: true` explicitly set (the only way a
- * solid's resolved `emitEvents` becomes true, since solids default to `false`).
- *
- * `entity` is unused today: `collisionListener` has no additional effect on this
- * result. Tracked as a Core API cleanup (see `docs/MODULES.md`), not fixed here
- * to avoid changing event-emission behavior as part of a "simplify" pass.
+ * that guard passes, the entity is always the `self` side.
  */
 export function shouldEmitAsSelf(_entity: Entity, collision: ResolvedCollision): boolean {
   return collision.emitEvents;

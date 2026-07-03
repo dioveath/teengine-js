@@ -88,7 +88,8 @@ packages/teengine/src/
 
 ### Engine quality (next)
 
-- [ ] Remove demo tags (`PlayerTag`, `CoinTag`) from core entity types
+- [x] Remove demo tags from core entity types (`tags: Set<string>` + demo constants in examples)
+- [x] Seal public API — no demo atlas types, game-named collision presets, or coord internals
 - [ ] ECS query helpers
 - [ ] Small math exports (`Vec2`, utilities)
 - [ ] Asset load cache + GPU release
