@@ -1,4 +1,5 @@
-import type { AtlasRegion, DemoAtlas, EntityId } from "teengine";
+import type { AtlasRegion, EntityId } from "teengine";
+import type { SpaceInvadersAtlas } from "./createSpaceInvadersAtlas.js";
 
 export const WORLD_W = 800;
 export const WORLD_H = 600;
@@ -64,7 +65,7 @@ export function createSpaceInvadersState(): SpaceInvadersState {
   };
 }
 
-export function invaderRegion(atlas: DemoAtlas, kind: InvaderKind, frame: 0 | 1): AtlasRegion {
+export function invaderRegion(atlas: SpaceInvadersAtlas, kind: InvaderKind, frame: 0 | 1): AtlasRegion {
   if (kind === "A") {
     return frame === 0 ? atlas.invaderA : atlas.invaderAAlt;
   }

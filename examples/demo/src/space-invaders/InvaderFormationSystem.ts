@@ -1,5 +1,5 @@
 import type { FixedSystem } from "teengine";
-import type { DemoAtlas } from "teengine";
+import type { SpaceInvadersAtlas } from "./createSpaceInvadersAtlas.js";
 import {
   FORMATION_MARGIN,
   FORMATION_STEP_DOWN,
@@ -16,7 +16,7 @@ export class InvaderFormationSystem implements FixedSystem {
 
   constructor(
     private readonly state: SpaceInvadersState,
-    private readonly atlas: DemoAtlas,
+    private readonly atlas: SpaceInvadersAtlas,
   ) {}
 
   fixedUpdate(ctx: import("teengine").FixedSystemContext): void {

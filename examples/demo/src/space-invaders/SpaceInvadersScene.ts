@@ -1,4 +1,4 @@
-import type { DemoAtlas } from "teengine";
+import type { SpaceInvadersAtlas } from "./createSpaceInvadersAtlas.js";
 import {
   Color,
   Layers,
@@ -32,13 +32,13 @@ import {
 export type SpaceInvadersSceneContext = {
   engine: Engine;
   world: World;
-  atlas: DemoAtlas;
+  atlas: SpaceInvadersAtlas;
   state: SpaceInvadersState;
   playerId: EntityId;
   uiCamera: ReturnType<typeof createUiCamera>;
 };
 
-function spawnInvaders(world: World, atlas: DemoAtlas, state: SpaceInvadersState): void {
+function spawnInvaders(world: World, atlas: SpaceInvadersAtlas, state: SpaceInvadersState): void {
   for (let row = 0; row < INVADER_ROWS; row++) {
     const kind: InvaderKind = row < 2 ? "A" : "B";
     for (let col = 0; col < INVADER_COLS; col++) {
@@ -59,7 +59,7 @@ function spawnInvaders(world: World, atlas: DemoAtlas, state: SpaceInvadersState
   }
 }
 
-function spawnHudHearts(world: World, atlas: DemoAtlas, lives: number): void {
+function spawnHudHearts(world: World, atlas: SpaceInvadersAtlas, lives: number): void {
   for (let i = 0; i < lives; i++) {
     world.spawn({
       name: `Life-${i}`,
@@ -69,7 +69,7 @@ function spawnHudHearts(world: World, atlas: DemoAtlas, lives: number): void {
   }
 }
 
-export function createSpaceInvadersScene(engine: Engine, atlas: DemoAtlas): SpaceInvadersSceneContext {
+export function createSpaceInvadersScene(engine: Engine, atlas: SpaceInvadersAtlas): SpaceInvadersSceneContext {
   const canvas = engine.graphics.viewport;
   const world = new World();
   const state = createSpaceInvadersState();

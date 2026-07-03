@@ -1,5 +1,5 @@
 import { Engine } from "teengine";
-import { createDemoAtlas } from "./createDemoAtlas.js";
+import { createSpaceInvadersAtlas } from "./createSpaceInvadersAtlas.js";
 import { bindSpaceInvadersLoop, createSpaceInvadersScene } from "./SpaceInvadersScene.js";
 
 async function main(): Promise<void> {
@@ -12,7 +12,7 @@ async function main(): Promise<void> {
 
   try {
     const engine = await Engine.create({ canvas });
-    const atlas = createDemoAtlas(engine.device);
+    const atlas = createSpaceInvadersAtlas(engine.device);
 
     const scene = createSpaceInvadersScene(engine, atlas);
     bindSpaceInvadersLoop(scene);

@@ -16,14 +16,3 @@ export type AtlasRegion = {
   width: number;
   height: number;
 };
-
-export type DemoAtlas = {
-  player: AtlasRegion;
-  invaderA: AtlasRegion;
-  invaderAAlt: AtlasRegion;
-  invaderB: AtlasRegion;
-  invaderBAlt: AtlasRegion;
-  bullet: AtlasRegion;
-  enemyBullet: AtlasRegion;
-  uiHeart: AtlasRegion;
-};
