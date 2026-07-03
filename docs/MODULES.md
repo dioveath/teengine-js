@@ -102,7 +102,8 @@ When unsure, leave it out. The engine stays smaller; games stay flexible.
 |------|--------|
 | Remove demo tags from `Entity` | ✅ `tags: Set<string>` |
 | Seal public API | ✅ Phase 2 |
-| ECS query helpers | Planned |
+| ECS query helpers | ✅ `World.query()` |
+| Test coverage (engine/ecs/graphics/math/assets) | ✅ Phase 3 |
 | Export `Vec2` / small math helpers | Planned |
 | Asset cache / lifecycle | Planned |
 | Physics perf (buffer reuse) | Planned |

@@ -90,7 +90,8 @@ packages/teengine/src/
 
 - [x] Remove demo tags from core entity types (`tags: Set<string>` + demo constants in examples)
 - [x] Seal public API — no demo atlas types, game-named collision presets, or coord internals
-- [ ] ECS query helpers
+- [x] ECS query helpers (`World.query`)
+- [x] Test coverage for engine, ecs, graphics, math, assets
 - [ ] Small math exports (`Vec2`, utilities)
 - [ ] Asset load cache + GPU release
 - [ ] Physics stepping performance
