@@ -22,6 +22,20 @@ Open http://localhost:5173 — a Steam-style store page listing all demo games.
 
 Each demo opens in its own page. Use **← Store** to return to the launcher.
 
+## GitHub Pages
+
+GitHub Pages **does not** let you pick `examples/demo` as a source folder — only `/ (root)` or `/docs` appear in Settings. This repo uses a **GitHub Actions** workflow instead:
+
+1. Merge to `main`
+2. Repo **Settings → Pages → Build and deployment → Source**: choose **GitHub Actions**
+3. The `Deploy demo to GitHub Pages` workflow builds `examples/demo` and publishes the Vite output
+
+Your store will be live at:
+
+**https://dioveath.github.io/teengine-js/**
+
+(Replace `dioveath` / `teengine-js` if you fork or rename the repo.)
+
 ## Use in your project
 
 ```bash

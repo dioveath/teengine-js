@@ -1,7 +1,11 @@
 import { resolve } from "node:path";
 import { defineConfig } from "vite";
 
+// GitHub Pages project sites are served from /repo-name/ (set via VITE_BASE in CI).
+const base = process.env.VITE_BASE ?? "/";
+
 export default defineConfig({
+  base,
   server: {
     port: 5173,
     strictPort: true,
