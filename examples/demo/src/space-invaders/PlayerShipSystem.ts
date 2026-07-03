@@ -1,4 +1,4 @@
-import type { AtlasRegion, FixedSystem } from "teengine";
+import type { AtlasRegion, EntityId, FixedSystem } from "teengine";
 import { Layers } from "teengine";
 import {
   PLAYER_H,
@@ -12,6 +12,7 @@ export class PlayerShipSystem implements FixedSystem {
   readonly name = "PlayerShipSystem";
 
   constructor(
+    private readonly playerId: EntityId,
     private readonly state: SpaceInvadersState,
     private readonly bulletRegion: AtlasRegion,
   ) {}
@@ -20,7 +21,7 @@ export class PlayerShipSystem implements FixedSystem {
     const { world, input, dt } = ctx;
     if (this.state.gameOver || this.state.won) return;
 
-    const player = [...world.getAll()].find((e) => e.player);
+    const player = world.get(this.playerId);
     if (!player) return;
 
     const dx = input.actionAxis("move_left", "move_right");

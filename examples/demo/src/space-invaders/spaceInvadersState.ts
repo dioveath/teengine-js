@@ -35,13 +35,13 @@ export type SpaceInvadersState = {
   gameOver: boolean;
   won: boolean;
   formationDir: 1 | -1;
-  stepDownPending: boolean;
   fireCooldown: number;
   enemyFireCooldown: number;
   invaderAnimFrame: 0 | 1;
   invaderAnimTimer: number;
   invaderIds: EntityId[];
   invaderKinds: Map<EntityId, InvaderKind>;
+  hudHeartIds: EntityId[];
   playerBulletId: EntityId | null;
   enemyBulletIds: Set<EntityId>;
 };
@@ -53,13 +53,13 @@ export function createSpaceInvadersState(): SpaceInvadersState {
     gameOver: false,
     won: false,
     formationDir: 1,
-    stepDownPending: false,
     fireCooldown: 0,
     enemyFireCooldown: 1.2,
     invaderAnimFrame: 0,
     invaderAnimTimer: 0,
     invaderIds: [],
     invaderKinds: new Map(),
+    hudHeartIds: [],
     playerBulletId: null,
     enemyBulletIds: new Set(),
   };

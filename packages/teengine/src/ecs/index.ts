@@ -14,9 +14,7 @@ export type {
   ShapeRect,
   ShapeCircle,
   ShapeLine,
-  PlayerTag,
   CameraTargetTag,
-  CoinTag,
   CollisionListenerTag,
   SpinComponent,
 } from "./Entity.js";

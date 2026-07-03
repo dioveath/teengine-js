@@ -1,4 +1,4 @@
-import type { AtlasRegion, FixedSystem } from "teengine";
+import type { AtlasRegion, EntityId, FixedSystem } from "teengine";
 import { Layers } from "teengine";
 import {
   BULLET_H,
@@ -11,6 +11,7 @@ import {
   PLAYER_W,
   PLAYER_Y,
   WORLD_H,
+  WORLD_W,
   boxesOverlap,
   invaderPoints,
   type SpaceInvadersState,
@@ -20,6 +21,7 @@ export class CombatSystem implements FixedSystem {
   readonly name = "CombatSystem";
 
   constructor(
+    private readonly playerId: EntityId,
     private readonly state: SpaceInvadersState,
     private readonly enemyBulletRegion: AtlasRegion,
   ) {}
@@ -101,7 +103,7 @@ export class CombatSystem implements FixedSystem {
   }
 
   private checkCollisions(world: import("teengine").FixedSystemContext["world"]): void {
-    const player = [...world.getAll()].find((e) => e.player);
+    const player = world.get(this.playerId);
     if (!player) return;
 
     if (this.state.playerBulletId !== null) {
@@ -152,7 +154,7 @@ export class CombatSystem implements FixedSystem {
       ) {
         world.remove(bulletId);
         this.state.enemyBulletIds.delete(bulletId);
-        this.killPlayer(world, player.id);
+        this.killPlayer(world);
         break;
       }
     }
@@ -178,7 +180,7 @@ export class CombatSystem implements FixedSystem {
     }
   }
 
-  private killPlayer(world: import("teengine").FixedSystemContext["world"], playerId: number): void {
+  private killPlayer(world: import("teengine").FixedSystemContext["world"]): void {
     this.state.lives -= 1;
     for (const bulletId of [...this.state.enemyBulletIds]) {
       world.remove(bulletId);
@@ -189,14 +191,21 @@ export class CombatSystem implements FixedSystem {
       this.state.playerBulletId = null;
     }
 
+    while (this.state.hudHeartIds.length > this.state.lives) {
+      const heartId = this.state.hudHeartIds.pop();
+      if (heartId !== undefined) {
+        world.remove(heartId);
+      }
+    }
+
     if (this.state.lives <= 0) {
       this.state.gameOver = true;
       return;
     }
 
-    const player = world.get(playerId);
+    const player = world.get(this.playerId);
     if (player) {
-      player.transform.x = 400;
+      player.transform.x = WORLD_W * 0.5;
       player.transform.y = PLAYER_Y;
     }
   }

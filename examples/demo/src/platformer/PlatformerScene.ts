@@ -13,13 +13,18 @@ import {
   type EntityId,
 } from "teengine";
 import type { PhysicsBridge } from "teengine";
-import { CoinPickupSystem } from "./CoinPickupSystem.js";
 import { DebugOverlaySystem } from "./DebugOverlaySystem.js";
+import {
+  PlatformerPhysicsEventsSystem,
+  type PlatformerPhysicsState,
+} from "./PlatformerPhysicsEventsSystem.js";
 import { PlayerControllerSystem } from "./PlayerControllerSystem.js";
 import type { PlatformerAtlas } from "./createPlatformerAtlas.js";
 
 export const GROUND_Y = 300;
 export const PLAYER_SIZE = 28;
+const GROUND_WIDTH = 3000;
+const GROUND_HEIGHT = 40;
 
 export type PlatformerSceneContext = {
   engine: Engine;
@@ -38,6 +43,7 @@ export function createPlatformerScene(
 ): PlatformerSceneContext {
   const canvas = engine.graphics.viewport;
   const world = new World(physics);
+  const physicsState: PlatformerPhysicsState = { grounded: false };
 
   engine.input.bindAction("move_left", ["ArrowLeft", "KeyA"]);
   engine.input.bindAction("move_right", ["ArrowRight", "KeyD"]);
@@ -49,29 +55,41 @@ export function createPlatformerScene(
   engine.graphics.registerLayer(Layers.world, { camera: worldCam, sort: "y" });
   engine.graphics.registerLayer(Layers.ui, { camera: uiCam, sort: "z" });
 
-  physics.createStaticBox(-500, GROUND_Y, 3000, 40);
+  const groundId = world.spawn({
+    name: "Ground",
+    transform: {
+      x: -500 + GROUND_WIDTH * 0.5,
+      y: GROUND_Y + GROUND_HEIGHT * 0.5,
+    },
+    shape: {
+      kind: "rect",
+      width: GROUND_WIDTH,
+      height: GROUND_HEIGHT,
+      color: Color.rgb(0.2, 0.25, 0.3),
+      layer: Layers.world,
+    },
+    collider: { shape: { kind: "box", width: GROUND_WIDTH, height: GROUND_HEIGHT } },
+    collision: {
+      response: "solid",
+      layers: layers(CollisionGroups.GROUND, CollisionGroups.PLAYER | CollisionGroups.ENEMY),
+    },
+    rigidBody: { type: "fixed" },
+  });
 
   const playerId = world.spawn({
     name: "Player",
     transform: { x: 400, y: GROUND_Y - PLAYER_SIZE * 0.5 },
     sprite: { region: atlas.player, layer: Layers.world },
-    shape: {
-      kind: "circle",
-      layer: Layers.world,
-      radius: 140,
-      color: Color.rgb(0.2, 0.25, 0.3, 0.15),
-      segments: 48,
-    },
     collider: { shape: { kind: "box", width: PLAYER_SIZE, height: PLAYER_SIZE }, friction: 0.8, restitution: 0 },
     collision: {
       response: "solid",
       layers: layers(CollisionGroups.PLAYER, CollisionGroups.PICKUP | CollisionGroups.GROUND | CollisionGroups.ENEMY),
+      emitEvents: true,
     },
     rigidBody: {
       type: "dynamic",
       lockRotation: true,
     },
-    player: { _tag: "player" },
     cameraTarget: { _tag: "cameraTarget" },
   });
 
@@ -90,7 +108,7 @@ export function createPlatformerScene(
     },
   });
 
-  world.spawn({
+  const coinId = world.spawn({
     name: "Coin",
     transform: { x: 280, y: 260 },
     sprite: { region: atlas.coin, layer: Layers.world },
@@ -99,7 +117,6 @@ export function createPlatformerScene(
       response: "sensor",
       layers: layers(CollisionGroups.PICKUP, CollisionGroups.PLAYER),
     },
-    coin: { _tag: "coin" },
     spin: { speed: 2 },
   });
 
@@ -115,14 +132,14 @@ export function createPlatformerScene(
     sprite: { region: atlas.uiHeart, layer: Layers.ui, origin: { x: 0, y: 0 } },
   });
 
-  world.addFixedSystem(new PlayerControllerSystem());
-  world.addPostPhysicsSystem(new CoinPickupSystem());
+  world.addFixedSystem(new PlayerControllerSystem(playerId, physicsState));
+  world.addPostPhysicsSystem(
+    new PlatformerPhysicsEventsSystem(playerId, groundId, new Set([coinId]), physicsState),
+  );
   world.addFixedSystem(new SpinSystem());
   world.addRenderSystem(new CameraFollowSystem(worldCam));
   world.addRenderSystem(new WorldEntityRenderSystem(engine.graphics));
-  world.addRenderSystem(
-    new DebugOverlaySystem(engine.graphics, { groundY: GROUND_Y, worldCamera: worldCam }),
-  );
+  world.addRenderSystem(new DebugOverlaySystem(engine.graphics, { groundY: GROUND_Y, worldCamera: worldCam }));
 
   return {
     engine,

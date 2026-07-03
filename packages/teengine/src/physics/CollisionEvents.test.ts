@@ -22,7 +22,6 @@ describe("Collision events", () => {
         layers: layers(CollisionGroups.PLAYER, CollisionGroups.PICKUP),
       },
       rigidBody: { type: "dynamic" },
-      player: { _tag: "player" },
     });
 
     const coin = createEntity(2, {
@@ -32,7 +31,6 @@ describe("Collision events", () => {
         response: "sensor",
         layers: layers(CollisionGroups.PICKUP, CollisionGroups.PLAYER),
       },
-      coin: { _tag: "coin" },
     });
 
     bridge.register(player);

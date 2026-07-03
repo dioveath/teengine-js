@@ -84,7 +84,7 @@ When unsure, leave it out. The engine stays smaller; games stay flexible.
 
 ## Cleanup
 
-Core entity types currently include demo markers (`PlayerTag`, `CoinTag`) that violate the boundary above. These will move to `examples/demo` (or become generic tags the game defines). The engine exposes **components and hooks**, not **roles in a specific game**.
+Core entity types previously included demo markers (`PlayerTag`, `CoinTag`) that violated the boundary above. Those have been removed — games track roles via entity IDs, names, or their own state (see `examples/demo`).
 
 ---
 
@@ -94,8 +94,8 @@ Work that makes the engine **simpler or more complete as a 2D foundation** — n
 
 | Item | Rationale |
 |------|-----------|
-| Remove demo tags from `Entity` | Stop leaking example concepts into public types |
-| ECS query helpers | Less `getAll()` + manual filtering in every system |
+| ~~Remove demo tags from `Entity`~~ | Done — examples own game roles |
+| ~~ECS query helpers~~ | Done — `World.query` / `World.find` |
 | Export `Vec2` / small math helpers | Shared primitives, not gameplay |
 | Asset cache / lifecycle | Load once, release GPU resources cleanly |
 | Physics perf (buffer reuse) | Engine quality, not new API surface |

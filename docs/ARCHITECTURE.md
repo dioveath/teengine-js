@@ -88,8 +88,8 @@ packages/teengine/src/
 
 ### Engine quality (next)
 
-- [ ] Remove demo tags (`PlayerTag`, `CoinTag`) from core entity types
-- [ ] ECS query helpers
+- [x] Remove demo tags (`PlayerTag`, `CoinTag`) from core entity types
+- [x] ECS query helpers (`World.query`, `World.find`)
 - [ ] Small math exports (`Vec2`, utilities)
 - [ ] Asset load cache + GPU release
 - [ ] Physics stepping performance
