@@ -1,7 +1,5 @@
-import type { DemoAtlas } from "teengine";
 import {
   CameraFollowSystem,
-  CollisionGroups,
   Color,
   createUiCamera,
   createWorldCamera,
@@ -16,6 +14,7 @@ import {
 import type { PhysicsBridge } from "teengine";
 import { CoinPickupSystem } from "./CoinPickupSystem.js";
 import { DebugOverlaySystem } from "./DebugOverlaySystem.js";
+import { DemoCollisionGroups, DemoTags, type DemoAtlas } from "./demoConstants.js";
 import { PlayerControllerSystem } from "./PlayerControllerSystem.js";
 
 export const GROUND_Y = 300;
@@ -54,6 +53,7 @@ export function createDemoScene(
   const playerId = world.spawn({
     name: "Player",
     transform: { x: 400, y: GROUND_Y - PLAYER_SIZE * 0.5 },
+    tags: [DemoTags.player, DemoTags.cameraTarget],
     sprite: { region: atlas.player, layer: Layers.world },
     shape: {
       kind: "circle",
@@ -65,14 +65,15 @@ export function createDemoScene(
     collider: { shape: { kind: "box", width: PLAYER_SIZE, height: PLAYER_SIZE }, friction: 0.8, restitution: 0 },
     collision: {
       response: "solid",
-      layers: layers(CollisionGroups.PLAYER, CollisionGroups.PICKUP | CollisionGroups.GROUND | CollisionGroups.ENEMY),
+      layers: layers(
+        DemoCollisionGroups.PLAYER,
+        DemoCollisionGroups.PICKUP | DemoCollisionGroups.GROUND | DemoCollisionGroups.ENEMY,
+      ),
     },
     rigidBody: {
       type: "dynamic",
       lockRotation: true,
     },
-    player: { _tag: "player" },
-    cameraTarget: { _tag: "cameraTarget" },
   });
 
   world.spawn({
@@ -82,7 +83,10 @@ export function createDemoScene(
     collider: { shape: { kind: "box", width: 28, height: 28 } },
     collision: {
       response: "solid",
-      layers: layers(CollisionGroups.ENEMY, CollisionGroups.PLAYER | CollisionGroups.GROUND),
+      layers: layers(
+        DemoCollisionGroups.ENEMY,
+        DemoCollisionGroups.PLAYER | DemoCollisionGroups.GROUND,
+      ),
     },
     rigidBody: {
       type: "dynamic",
@@ -93,13 +97,13 @@ export function createDemoScene(
   world.spawn({
     name: "Coin",
     transform: { x: 280, y: 260 },
+    tags: [DemoTags.coin],
     sprite: { region: atlas.coin, layer: Layers.world },
     collider: { shape: { kind: "ball", radius: 12 } },
     collision: {
       response: "sensor",
-      layers: layers(CollisionGroups.PICKUP, CollisionGroups.PLAYER),
+      layers: layers(DemoCollisionGroups.PICKUP, DemoCollisionGroups.PLAYER),
     },
-    coin: { _tag: "coin" },
     spin: { speed: 2 },
   });
 
@@ -118,7 +122,7 @@ export function createDemoScene(
   world.addFixedSystem(new PlayerControllerSystem());
   world.addPostPhysicsSystem(new CoinPickupSystem());
   world.addFixedSystem(new SpinSystem());
-  world.addRenderSystem(new CameraFollowSystem(worldCam));
+  world.addRenderSystem(new CameraFollowSystem(worldCam, DemoTags.cameraTarget));
   world.addRenderSystem(new WorldEntityRenderSystem(engine.graphics));
   world.addRenderSystem(
     new DebugOverlaySystem(engine.graphics, { groundY: GROUND_Y, worldCamera: worldCam }),

@@ -45,6 +45,29 @@ describe("PhysicsWorld", () => {
     physics.removeEntity(entity.id);
   });
 
+  it("keeps entity transform stable when collider has a non-zero offset", () => {
+    // Regression: getTransformForEntity must subtract the offset baked into
+    // the body's translation at creation, or the entity would appear to jump
+    // by `offset` the instant physics starts syncing.
+    const entity = createEntity(4, {
+      transform: { x: 150, y: 60 },
+      collider: {
+        shape: { kind: "box", width: 20, height: 20 },
+        offset: { x: 15, y: -8 },
+      },
+      rigidBody: { type: "fixed" },
+    });
+
+    physics.createPhysicsForEntity(entity);
+
+    const transform = physics.getTransformForEntity(entity.id);
+    expect(transform).not.toBeNull();
+    expect(transform!.x).toBeCloseTo(150);
+    expect(transform!.y).toBeCloseTo(60);
+
+    physics.removeEntity(entity.id);
+  });
+
   it("rests a falling body on a static floor", () => {
     physics.createStaticBox(0, 300, 400, 20);
 

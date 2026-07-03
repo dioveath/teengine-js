@@ -11,10 +11,14 @@
     "build:demo": "npm run build -w teengine && npm run build -w demo",
     "dev": "npm run build -w teengine && npm run dev -w demo",
     "typecheck": "npm run typecheck -w teengine && npm run typecheck -w demo",
+    "lint": "eslint .",
     "test": "npm run test -w teengine"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.62.1",
+    "@typescript-eslint/parser": "^8.62.1",
     "@webgpu/types": "^0.1.60",
+    "eslint": "^10.6.0",
     "typescript": "^5.8.3"
   }
 }

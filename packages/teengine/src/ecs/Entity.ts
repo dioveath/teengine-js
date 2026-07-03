@@ -70,18 +70,6 @@ export type ShapeComponent = (ShapeRect | ShapeCircle | ShapeLine) & {
   layer: LayerName;
 };
 
-/** Marker: entity is the player character. */
-export type PlayerTag = { readonly _tag: "player" };
-
-/** Marker: camera follows this entity. */
-export type CameraTargetTag = { readonly _tag: "cameraTarget" };
-
-/** Marker: collectable pickup (demo / game-specific pattern). */
-export type CoinTag = { readonly _tag: "coin" };
-
-/** Marker: receive collision events as `self` when `emitEvents` is enabled. */
-export type CollisionListenerTag = { readonly _tag: "collisionListener" };
-
 /** Rotates entity over time (radians per second). */
 export type SpinComponent = { speed: number };
 
@@ -90,30 +78,25 @@ export type Entity = {
   name: string;
   active: boolean;
   transform: TransformData;
+  /** Game-defined labels for systems to filter on (e.g. `"player"`, `"pickup"`). */
+  tags: Set<string>;
   sprite?: SpriteComponent;
   shape?: ShapeComponent;
   collider?: ColliderComponent;
   collision?: CollisionComponent;
   rigidBody?: RigidBodyComponent;
-  player?: PlayerTag;
-  cameraTarget?: CameraTargetTag;
-  coin?: CoinTag;
-  collisionListener?: CollisionListenerTag;
   spin?: SpinComponent;
 };
 
 export type SpawnConfig = {
   name?: string;
   transform?: Partial<TransformData>;
+  tags?: Iterable<string>;
   sprite?: SpriteComponent;
   shape?: ShapeComponent;
   collider?: ColliderComponent;
   collision?: CollisionComponent;
   rigidBody?: RigidBodyComponent;
-  player?: PlayerTag;
-  cameraTarget?: CameraTargetTag;
-  coin?: CoinTag;
-  collisionListener?: CollisionListenerTag;
   spin?: SpinComponent;
 };
 
@@ -123,15 +106,12 @@ export function createEntity(id: EntityId, config: SpawnConfig): Entity {
     name: config.name ?? `Entity ${id}`,
     active: true,
     transform: Transform.create(config.transform),
+    tags: new Set(config.tags ?? []),
     sprite: config.sprite,
     shape: config.shape,
     collider: config.collider,
     collision: config.collision,
     rigidBody: config.rigidBody,
-    player: config.player,
-    cameraTarget: config.cameraTarget,
-    coin: config.coin,
-    collisionListener: config.collisionListener,
     spin: config.spin,
   };
 }

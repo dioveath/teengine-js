@@ -36,10 +36,6 @@ export class SpriteBatcher {
     return new SpriteBatcher(gpu, pipeline, vertexBuffer);
   }
 
-  clear(): void {
-    this.vertices = [];
-  }
-
   /** Draw sprites grouped by texture to minimize bind-group changes. */
   drawSorted(pass: GPURenderPassEncoder, commands: SpriteDrawCommand[], viewProjection: Mat3): void {
     if (commands.length === 0) return;

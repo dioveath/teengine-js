@@ -1,3 +1,4 @@
+import type { Engine } from "../engine/Engine.js";
 import type { AtlasRegion, GpuTexture } from "./Atlas.js";
 
 /** JSON atlas descriptor (Aseprite / TexturePacker-style minimal subset). */
@@ -21,10 +22,11 @@ export type LoadedAtlas = Record<string, AtlasRegion>;
  * Returns named regions ready for drawSprite().
  */
 export async function loadAtlasFromJson(
-  device: GPUDevice,
+  engine: Engine,
   jsonUrl: string,
   imageUrl?: string,
 ): Promise<LoadedAtlas> {
+  const device = engine.getGpuDevice();
   const response = await fetch(jsonUrl);
   if (!response.ok) {
     throw new Error(`Failed to load atlas JSON: ${jsonUrl}`);

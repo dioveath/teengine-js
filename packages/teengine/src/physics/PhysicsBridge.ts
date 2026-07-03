@@ -1,6 +1,6 @@
 import type { Entity, EntityId } from "../ecs/Entity.js";
 import { hasPhysics, isSimulatedBody } from "../ecs/Entity.js";
-import { snapshotTransform, type TransformSnapshot } from "../ecs/interpolation.js";
+import { lerpTransform, snapshotTransform, type TransformSnapshot } from "../ecs/interpolation.js";
 import type { Transform } from "../ecs/Transform.js";
 import type { CollisionEvent } from "./CollisionEvents.js";
 import type { PhysicsWorld, RigidBodyHandle } from "./PhysicsWorld.js";
@@ -49,10 +49,6 @@ export class PhysicsBridge {
     return this.bodies.get(entityId)?.simulates ?? false;
   }
 
-  getHandle(entityId: EntityId): RigidBodyHandle | undefined {
-    return this.bodies.get(entityId)?.handle;
-  }
-
   /** Snapshot transforms before physics step for interpolation. */
   snapshotPreviousTransforms(getTransform: (id: EntityId) => Transform | undefined): void {
     for (const [id, entry] of this.bodies) {
@@ -80,7 +76,10 @@ export class PhysicsBridge {
       const entity = getEntity(id);
       if (!entity) continue;
 
-      const t = this.physics.getTransform(entry.handle);
+      // Uses the entity-aware lookup (not `getTransform(entry.handle)`) so any
+      // `collider.offset` baked into the body's translation is subtracted back out.
+      const t = this.physics.getTransformForEntity(id);
+      if (!t) continue;
       entity.transform.x = t.x;
       entity.transform.y = t.y;
       entity.transform.rotation = t.rotation;
@@ -104,13 +103,7 @@ export class PhysicsBridge {
       return out;
     }
 
-    const snap = snapshotTransform(current);
-    out.x = entry.prev.x + (snap.x - entry.prev.x) * alpha;
-    out.y = entry.prev.y + (snap.y - entry.prev.y) * alpha;
-    out.rotation = entry.prev.rotation + (snap.rotation - entry.prev.rotation) * alpha;
-    out.scaleX = snap.scaleX;
-    out.scaleY = snap.scaleY;
-    return out;
+    return lerpTransform(entry.prev, snapshotTransform(current), alpha, out);
   }
 
   get world(): PhysicsWorld {

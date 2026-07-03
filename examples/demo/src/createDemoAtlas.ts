@@ -1,33 +1,11 @@
-import type { AtlasRegion, DemoAtlas, GpuTexture } from "teengine";
+import { uploadRgbaTexture, type AtlasRegion, type Engine } from "teengine";
+import type { DemoAtlas } from "./demoConstants.js";
 
 const CELL = 32;
 const COLS = 4;
 const SIZE = CELL * COLS;
 
-function createTextureFromRgba(
-  device: GPUDevice,
-  pixels: Uint8ClampedArray,
-  width: number,
-  height: number,
-): GpuTexture {
-  const data = new Uint8Array(pixels);
-  const texture = device.createTexture({
-    size: { width, height },
-    format: "rgba8unorm",
-    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
-  });
-  device.queue.writeTexture(
-    { texture },
-    data,
-    { bytesPerRow: width * 4 },
-    { width, height },
-  );
-  const view = texture.createView();
-  const sampler = device.createSampler({ magFilter: "nearest", minFilter: "nearest" });
-  return { texture, view, sampler, width, height };
-}
-
-function regionFromCell(texture: GpuTexture, col: number, row: number): AtlasRegion {
+function regionFromCell(texture: AtlasRegion["texture"], col: number, row: number): AtlasRegion {
   const x = col * CELL;
   const y = row * CELL;
   return {
@@ -42,7 +20,7 @@ function regionFromCell(texture: GpuTexture, col: number, row: number): AtlasReg
 }
 
 /** Procedural demo atlas — no external image files required. */
-export function createDemoAtlas(device: GPUDevice): DemoAtlas {
+export function createDemoAtlas(engine: Engine): DemoAtlas {
   const pixels = new Uint8ClampedArray(SIZE * SIZE * 4);
 
   const fills: Array<[col: number, row: number, r: number, g: number, b: number, a: number]> = [
@@ -68,7 +46,7 @@ export function createDemoAtlas(device: GPUDevice): DemoAtlas {
     }
   }
 
-  const texture = createTextureFromRgba(device, pixels, SIZE, SIZE);
+  const texture = uploadRgbaTexture(engine, pixels, SIZE, SIZE);
   return {
     player: regionFromCell(texture, 0, 0),
     enemy: regionFromCell(texture, 1, 0),

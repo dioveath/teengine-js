@@ -6,16 +6,8 @@ export class ActionMap {
     this.bindings.set(action, new Set(codes));
   }
 
-  unbind(action: string): void {
-    this.bindings.delete(action);
-  }
-
   getCodes(action: string): readonly string[] {
     const codes = this.bindings.get(action);
     return codes ? [...codes] : [];
-  }
-
-  hasAction(action: string): boolean {
-    return this.bindings.has(action);
   }
 }

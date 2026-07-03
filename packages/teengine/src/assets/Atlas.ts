@@ -1,3 +1,4 @@
+/** GPU texture bundle used internally by atlas regions and the renderer. */
 export type GpuTexture = {
   texture: GPUTexture;
   view: GPUTextureView;
@@ -15,11 +16,4 @@ export type AtlasRegion = {
   v1: number;
   width: number;
   height: number;
-};
-
-export type DemoAtlas = {
-  player: AtlasRegion;
-  enemy: AtlasRegion;
-  coin: AtlasRegion;
-  uiHeart: AtlasRegion;
 };

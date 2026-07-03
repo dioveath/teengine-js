@@ -14,12 +14,10 @@ export type {
   ShapeRect,
   ShapeCircle,
   ShapeLine,
-  PlayerTag,
-  CameraTargetTag,
-  CoinTag,
-  CollisionListenerTag,
   SpinComponent,
 } from "./Entity.js";
-export { World, sortEntitiesForLayer } from "./World.js";
+export { World } from "./World.js";
 export { hasPhysics, isSimulatedBody } from "./Entity.js";
+export { matchesEntityQuery } from "./query.js";
+export type { EntityQuery, EntityComponentKey } from "./query.js";
 export type { FixedSystem, RenderSystem, FixedSystemContext, RenderSystemContext } from "./System.js";
