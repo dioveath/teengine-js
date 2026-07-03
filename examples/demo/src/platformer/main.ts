@@ -2,6 +2,26 @@ import { Engine, PhysicsBridge, PhysicsWorld } from "teengine";
 import { createPlatformerAtlas } from "./createPlatformerAtlas.js";
 import { bindPlatformerLoop, createPlatformerScene } from "./PlatformerScene.js";
 
+function showFallback(fallback: HTMLElement, error: unknown): void {
+  const message = error instanceof Error ? error.message : String(error);
+  const isWebGpuError = /webgpu/i.test(message);
+
+  const title = fallback.querySelector("#fallback-title");
+  const detail = fallback.querySelector("#fallback-detail");
+
+  if (title instanceof HTMLElement) {
+    title.textContent = isWebGpuError ? "WebGPU not available" : "Unable to start demo";
+  }
+
+  if (detail instanceof HTMLElement) {
+    detail.textContent = isWebGpuError
+      ? "TeEngine requires a browser with WebGPU support (Chrome 113+, Edge 113+, or Firefox Nightly with the flag enabled)."
+      : message;
+  }
+
+  fallback.style.display = "block";
+}
+
 async function main(): Promise<void> {
   const canvas = document.getElementById("canvas");
   if (!(canvas instanceof HTMLCanvasElement)) {
@@ -23,11 +43,7 @@ async function main(): Promise<void> {
     console.error(error);
     canvas.style.display = "none";
     if (fallback instanceof HTMLElement) {
-      fallback.style.display = "block";
-      const message = error instanceof Error ? error.message : String(error);
-      const detail = document.createElement("p");
-      detail.textContent = message;
-      fallback.appendChild(detail);
+      showFallback(fallback, error);
     }
   }
 }
