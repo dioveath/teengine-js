@@ -31,15 +31,15 @@ teengine-js/
 
 ## Design principles
 
-Module tiers (Kernel / Core / Standard / Application) are defined in [MODULES.md](./MODULES.md).
+See [MODULES.md](./MODULES.md) for the engine boundary.
 
 | Concern | Where it lives |
 |---------|----------------|
-| **Kernel + Core (T1/T2)** | `packages/teengine` — main export `teengine` |
-| **Standard modules (T3)** | `packages/teengine/src/<module>/` — subpath e.g. `teengine/character-controller` |
-| **Application (T4)** | `examples/*` (PlayerController, demo atlas, scenes) |
-| **GPU internals (T0)** | `packages/teengine/src/gpu` — private, not exported |
-| **Editor / UI** | Out of scope — use your own UI framework in the app |
+| **Engine** | `packages/teengine` — run, draw, simulate, input |
+| **Reference implementations** | `examples/*` (player controller, pickup, scenes) — copy and adapt |
+| **Your game** | Your app — systems, content, feel |
+| **GPU internals** | `packages/teengine/src/gpu` — private, not exported |
+| **Editor / UI** | Out of scope — use your own UI framework |
 
 ## Public API (`teengine`)
 
@@ -60,21 +60,7 @@ import {
 } from "teengine";
 ```
 
-### Future subpath exports (optional)
-
-If the API grows, add without breaking the main entry:
-
-```json
-{
-  "exports": {
-    ".": "./dist/index.js",
-    "./systems": "./dist/systems/index.js",
-    "./physics": "./dist/physics/index.js"
-  }
-}
-```
-
-Only split when consumers need tree-shaking or clearer boundaries — not required yet.
+Single entry point. No subpath exports unless the core API genuinely outgrows one bundle.
 
 ## Consuming the package
 

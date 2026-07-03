@@ -60,18 +60,16 @@ Collider and collision policy live on separate components (`collider`, `collisio
 
 ## Next phases
 
-### Phase 2 — Events ✅
+### Events ✅
 - Collision enter/exit via Rapier event queue
 - Sensor colliders for triggers
 
-### Phase 3 — Character controller (T3 Standard module)
-- Spec: [MODULES.md §8](./MODULES.md#8-character-controller-module-full-spec)
-- `teengine/character-controller` — Rapier KCC, `CharacterMotorSystem`, intent/motor components
-- Demo keeps input wiring (T4); drops impulse-based jump
-
-### Phase 4 — Performance
+### Performance
 - Reuse translation buffers (avoid alloc per body per frame)
 - Optional Web Worker for `world.step()`
+
+### Movement (not engine scope)
+Platformer / character movement is built in **your** `FixedSystem` using the physics API above (`setLinearVelocity`, `applyImpulse`, `kinematicPosition`, etc.). See `examples/demo/PlayerControllerSystem.ts` for a starting point.
 
 ## Vite config
 
