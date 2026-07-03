@@ -31,11 +31,14 @@ teengine-js/
 
 ## Design principles
 
+Module tiers (Kernel / Core / Standard / Application) are defined in [MODULES.md](./MODULES.md).
+
 | Concern | Where it lives |
 |---------|----------------|
-| **Reusable engine** | `packages/teengine` |
-| **Game-specific logic** | `examples/*` (PlayerController, demo atlas, scenes) |
-| **GPU internals** | `packages/teengine/src/gpu` — private, not exported |
+| **Kernel + Core (T1/T2)** | `packages/teengine` — main export `teengine` |
+| **Standard modules (T3)** | `packages/teengine/src/<module>/` — subpath e.g. `teengine/character-controller` |
+| **Application (T4)** | `examples/*` (PlayerController, demo atlas, scenes) |
+| **GPU internals (T0)** | `packages/teengine/src/gpu` — private, not exported |
 | **Editor / UI** | Out of scope — use your own UI framework in the app |
 
 ## Public API (`teengine`)

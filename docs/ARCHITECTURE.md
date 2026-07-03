@@ -1,6 +1,6 @@
 # TeEngine Architecture
 
-TeEngine is a **simple 2D TypeScript game engine** with **WebGPU** rendering, **systems-based ECS**, and **Rapier physics**. It ships as the **`teengine` npm package** — see [PACKAGE.md](./PACKAGE.md) for layout.
+TeEngine is a **simple 2D TypeScript game engine** with **WebGPU** rendering, **systems-based ECS**, and **Rapier physics**. It ships as the **`teengine` npm package** — see [PACKAGE.md](./PACKAGE.md) for layout and [MODULES.md](./MODULES.md) for module tiers (Kernel / Core / Standard / Application).
 
 ## Layer stack
 
@@ -34,7 +34,7 @@ world.addRenderSystem(new WorldEntityRenderSystem(graphics));
 world.addRenderSystem(new CameraFollowSystem(worldCamera));
 ```
 
-Game-specific systems (e.g. `PlayerControllerSystem`) live in your app, not the package.
+Game-specific systems (e.g. `PlayerControllerSystem`) live in your app (T4 Application tier). Optional engine subsystems (e.g. character controller) are **Standard modules** — see [MODULES.md](./MODULES.md).
 
 ## Game loop
 
@@ -72,6 +72,8 @@ packages/teengine/src/
 
 ## Roadmap
 
+### Kernel + Core (T1/T2) — done
+
 - [x] WebGPU + cameras + layers + sprites
 - [x] Entity system + fixed timestep + systems
 - [x] Input system
@@ -81,4 +83,12 @@ packages/teengine/src/
 - [x] JSON atlas loader
 - [x] npm package layout
 - [x] Collision events / sensors
-- [ ] Kinematic character controller
+- [x] Module specification ([MODULES.md](./MODULES.md))
+
+### Standard modules (T3) — planned
+
+- [ ] `teengine/character-controller` — full spec in [MODULES.md §8](./MODULES.md#8-character-controller-module-full-spec)
+- [ ] `teengine/animation`
+- [ ] `teengine/scene`
+- [ ] `teengine/math` (Vec2 utilities)
+- [ ] Migrate demo tags (`PlayerTag`, `CoinTag`) out of Core entity types

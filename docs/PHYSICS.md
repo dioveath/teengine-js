@@ -60,13 +60,14 @@ Collider and collision policy live on separate components (`collider`, `collisio
 
 ## Next phases
 
-### Phase 2 — Events
-- `PhysicsWorld.onCollisionEnter` / `Exit` via Rapier event queue
+### Phase 2 — Events ✅
+- Collision enter/exit via Rapier event queue
 - Sensor colliders for triggers
 
-### Phase 3 — Character controller
-- Rapier `KinematicCharacterController` for platformer movement
-- Replace impulse-based jump with controller API
+### Phase 3 — Character controller (T3 Standard module)
+- Spec: [MODULES.md §8](./MODULES.md#8-character-controller-module-full-spec)
+- `teengine/character-controller` — Rapier KCC, `CharacterMotorSystem`, intent/motor components
+- Demo keeps input wiring (T4); drops impulse-based jump
 
 ### Phase 4 — Performance
 - Reuse translation buffers (avoid alloc per body per frame)
