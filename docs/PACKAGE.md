@@ -78,10 +78,12 @@ Single entry point. No subpath exports unless the core API genuinely outgrows on
 ```json
 {
   "dependencies": {
-    "teengine": "workspace:*"
+    "teengine": "*"
   }
 }
 ```
+
+(`"*"` resolves to the local `packages/teengine` workspace package under npm workspaces.)
 
 ### Published (npm)
 

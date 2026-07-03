@@ -81,6 +81,20 @@ export class World {
     this.entities.delete(id);
   }
 
+  /** Enable an entity for simulation, rendering, and query matching. */
+  activate(id: EntityId): void {
+    const entity = this.entities.get(id);
+    if (!entity) throw new Error(`Entity ${id} not found.`);
+    entity.active = true;
+  }
+
+  /** Disable an entity without removing it from the world. */
+  deactivate(id: EntityId): void {
+    const entity = this.entities.get(id);
+    if (!entity) throw new Error(`Entity ${id} not found.`);
+    entity.active = false;
+  }
+
   fixedUpdate(ctx: Omit<import("./System.js").FixedSystemContext, "world">): void {
     this.time += ctx.dt;
 
@@ -105,10 +119,6 @@ export class World {
     for (const system of this.renderSystems) {
       system.render(fullCtx);
     }
-  }
-
-  get physicsBridge(): PhysicsBridge | null {
-    return this.physics;
   }
 
   get elapsed(): number {

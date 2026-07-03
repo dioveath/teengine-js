@@ -134,23 +134,6 @@ export class PhysicsWorld {
     this.entities.delete(entityId);
   }
 
-  removeBody(handle: RigidBodyHandle): void {
-    for (const [entityId, entry] of this.entityPhysics) {
-      if (entry.bodyHandle === handle) {
-        this.removeEntity(entityId);
-        return;
-      }
-    }
-  }
-
-  hasEntity(entityId: EntityId): boolean {
-    return this.entityPhysics.has(entityId);
-  }
-
-  simulatesEntity(entityId: EntityId): boolean {
-    return this.entityPhysics.get(entityId)?.simulates ?? false;
-  }
-
   getTransform(handle: RigidBodyHandle): { x: number; y: number; rotation: number } {
     const body = this.bodies.get(handle);
     if (!body) {

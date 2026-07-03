@@ -92,6 +92,9 @@ packages/teengine/src/
 - [x] Seal public API — no demo atlas types, game-named collision presets, or coord internals
 - [x] ECS query helpers (`World.query`)
 - [x] Test coverage for engine, ecs, graphics, math, assets
+- [x] ESLint + CI lint step
+- [x] Dead code cleanup (lerpTransform wiring, unused API trim)
+- [x] `World.activate()` / `World.deactivate()` for entity visibility
 - [ ] Small math exports (`Vec2`, utilities)
 - [ ] Asset load cache + GPU release
 - [ ] Physics stepping performance

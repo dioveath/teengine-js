@@ -82,7 +82,7 @@ describe("World", () => {
       },
     });
 
-    world.get(inactiveId)!.active = false;
+    world.deactivate(inactiveId);
 
     const buckets = world.collectRenderables(new Map());
     const worldBucket = buckets.get(Layers.world);
@@ -146,6 +146,25 @@ describe("World", () => {
     world.fixedUpdate({ dt: 1 / 60, tick: 1, time: 1 / 60, input, physics: null });
 
     expect(world.elapsed).toBeCloseTo(2 / 60);
+  });
+
+  it("activate and deactivate toggle entity.active", () => {
+    const world = new World();
+    const id = world.spawn({ name: "Toggle" });
+
+    expect(world.get(id)?.active).toBe(true);
+
+    world.deactivate(id);
+    expect(world.get(id)?.active).toBe(false);
+
+    world.activate(id);
+    expect(world.get(id)?.active).toBe(true);
+  });
+
+  it("activate and deactivate throw when the entity is missing", () => {
+    const world = new World();
+    expect(() => world.activate(999)).toThrow(/not found/);
+    expect(() => world.deactivate(999)).toThrow(/not found/);
   });
 });
 

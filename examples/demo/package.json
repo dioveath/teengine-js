@@ -8,7 +8,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "teengine": "file:../../packages/teengine"
+    "teengine": "*"
   },
   "devDependencies": {
     "@webgpu/types": "^0.1.60",

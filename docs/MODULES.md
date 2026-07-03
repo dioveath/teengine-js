@@ -104,6 +104,8 @@ When unsure, leave it out. The engine stays smaller; games stay flexible.
 | Seal public API | ✅ Phase 2 |
 | ECS query helpers | ✅ `World.query()` |
 | Test coverage (engine/ecs/graphics/math/assets) | ✅ Phase 3 |
+| ESLint + CI lint | ✅ Phase 4 |
+| Dead code cleanup + `World.activate/deactivate` | ✅ Phase 4 |
 | Export `Vec2` / small math helpers | Planned |
 | Asset cache / lifecycle | Planned |
 | Physics perf (buffer reuse) | Planned |
