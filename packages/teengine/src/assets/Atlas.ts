@@ -19,7 +19,11 @@ export type AtlasRegion = {
 
 export type DemoAtlas = {
   player: AtlasRegion;
-  enemy: AtlasRegion;
-  coin: AtlasRegion;
+  invaderA: AtlasRegion;
+  invaderAAlt: AtlasRegion;
+  invaderB: AtlasRegion;
+  invaderBAlt: AtlasRegion;
+  bullet: AtlasRegion;
+  enemyBullet: AtlasRegion;
   uiHeart: AtlasRegion;
 };

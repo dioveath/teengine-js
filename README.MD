@@ -30,13 +30,16 @@ const world = new World(physics);
 
 See [docs/PACKAGE.md](./docs/PACKAGE.md) for monorepo layout and [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for engine design.
 
+## Demo — Space Invaders
+
+Classic arcade shooter built with TeEngine ECS, procedural sprites, and manual collision (no physics engine).
+
 ## Demo controls
 
 | Input | Action |
 |-------|--------|
-| Arrow / WASD | Move player |
-| Space / Up | Jump |
-| Mouse | Debug circle in world |
+| Arrow / A D | Move ship left / right |
+| Space / Z / X | Fire |
 
 ## Scripts
 

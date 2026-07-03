@@ -1,8 +1,6 @@
 import { Engine } from "teengine";
-import { PhysicsBridge } from "teengine";
-import { PhysicsWorld } from "teengine";
 import { createDemoAtlas } from "./createDemoAtlas.js";
-import { bindDemoLoop, createDemoScene } from "./DemoScene.js";
+import { bindSpaceInvadersLoop, createSpaceInvadersScene } from "./SpaceInvadersScene.js";
 
 async function main(): Promise<void> {
   const canvas = document.getElementById("canvas");
@@ -14,12 +12,10 @@ async function main(): Promise<void> {
 
   try {
     const engine = await Engine.create({ canvas });
-    const physicsWorld = await PhysicsWorld.create({ gravityY: 980 });
-    const physics = new PhysicsBridge(physicsWorld);
     const atlas = createDemoAtlas(engine.device);
 
-    const scene = createDemoScene(engine, physics, atlas);
-    bindDemoLoop(scene);
+    const scene = createSpaceInvadersScene(engine, atlas);
+    bindSpaceInvadersLoop(scene);
     engine.start();
   } catch (error) {
     console.error(error);
