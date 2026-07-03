@@ -12,6 +12,7 @@ export {
   createWorldCamera,
   Color,
 } from "./graphics/Graphics.js";
+export type { FitToRectMode, FitToRectOptions } from "./graphics/Camera2D.js";
 export { Layers } from "./graphics/Layers.js";
 export type { LayerName } from "./graphics/Layers.js";
 export type { LayerSortMode, ShapeOptions } from "./graphics/Graphics.js";

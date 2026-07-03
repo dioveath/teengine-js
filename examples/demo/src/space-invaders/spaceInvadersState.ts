@@ -4,6 +4,10 @@ import type { SpaceInvadersAtlas } from "./createSpaceInvadersAtlas.js";
 export const WORLD_W = 800;
 export const WORLD_H = 600;
 
+/** Max rendered game size in viewport pixels before letterboxing (uniform scale, no stretch). */
+export const MAX_VIEW_W = 1280;
+export const MAX_VIEW_H = 960;
+
 export const PLAYER_Y = 540;
 export const PLAYER_SPEED = 320;
 export const PLAYER_W = 32;

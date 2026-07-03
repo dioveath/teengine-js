@@ -1,33 +1,20 @@
-import { Color, Layers, type Graphics } from "teengine";
-import type { RenderSystem } from "teengine";
-import { WORLD_W, type SpaceInvadersState } from "./spaceInvadersState.js";
+import { Color, Layers, type Graphics, type RenderSystem } from "teengine";
+import { WORLD_H, WORLD_W, type SpaceInvadersState } from "./spaceInvadersState.js";
 
 export class HudRenderSystem implements RenderSystem {
   readonly name = "HudRenderSystem";
 
   constructor(
-    private readonly graphics: Graphics,
     private readonly state: SpaceInvadersState,
     private readonly onHudUpdate: (score: number, lives: number, status: string) => void,
   ) {}
 
-  render(ctx: import("teengine").RenderSystemContext): void {
-    const { width, height } = ctx;
+  render(_ctx: import("teengine").RenderSystemContext): void {
     let status = "Playing";
     if (this.state.won) status = "You win!";
     if (this.state.gameOver && !this.state.won) status = "Game over";
     this.onHudUpdate(this.state.score, this.state.lives, status);
 
-    if (!this.state.gameOver && !this.state.won) return;
-
-    this.graphics.beginLayer(Layers.ui);
-    const boxW = 320;
-    const boxH = 80;
-    const x = width * 0.5 - boxW * 0.5;
-    const y = height * 0.5 - boxH * 0.5;
-    this.graphics.drawRect(x, y, boxW, boxH, Color.rgb(0.05, 0.08, 0.12, 0.85));
-    this.graphics.drawRect(x, y, boxW, 3, this.state.won ? Color.hex("#3fbf7f") : Color.hex("#ff4d6d"));
-    this.graphics.endLayer();
   }
 }
 
@@ -39,7 +26,7 @@ export class StarfieldRenderSystem implements RenderSystem {
   constructor(private readonly graphics: Graphics) {
     this.stars = Array.from({ length: 48 }, (_, i) => ({
       x: (i * 97) % WORLD_W,
-      y: (i * 53) % 520,
+      y: (i * 53) % WORLD_H,
       size: 1 + (i % 3),
       phase: (i * 0.7) % (Math.PI * 2),
     }));

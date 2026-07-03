@@ -20,6 +20,8 @@ import {
   INVADER_ROWS,
   INVADER_START_X,
   INVADER_START_Y,
+  MAX_VIEW_H,
+  MAX_VIEW_W,
   PLAYER_Y,
   WORLD_H,
   WORLD_W,
@@ -35,6 +37,7 @@ export type SpaceInvadersSceneContext = {
   atlas: SpaceInvadersAtlas;
   state: SpaceInvadersState;
   playerId: EntityId;
+  worldCamera: ReturnType<typeof createWorldCamera>;
   uiCamera: ReturnType<typeof createUiCamera>;
 };
 
@@ -102,7 +105,7 @@ export function createSpaceInvadersScene(engine: Engine, atlas: SpaceInvadersAtl
   world.addRenderSystem(new StarfieldRenderSystem(engine.graphics));
   world.addRenderSystem(new WorldEntityRenderSystem(engine.graphics));
   world.addRenderSystem(
-    new HudRenderSystem(engine.graphics, state, (score, lives, status) => {
+    new HudRenderSystem(state, (score, lives, status) => {
       if (hud) {
         hud.textContent = `Score: ${score}   Lives: ${lives}   ${status}   — Arrow keys move, Space fires`;
       }
@@ -110,17 +113,21 @@ export function createSpaceInvadersScene(engine: Engine, atlas: SpaceInvadersAtl
     }),
   );
 
-  return { engine, world, atlas, state, playerId, uiCamera: uiCam };
+  return { engine, world, atlas, state, playerId, worldCamera: worldCam, uiCamera: uiCam };
 }
 
 export function bindSpaceInvadersLoop(scene: SpaceInvadersSceneContext): void {
-  const { engine, world, uiCamera } = scene;
+  const { engine, world, worldCamera, uiCamera } = scene;
 
   engine.setLoop({
     fixedUpdate: (ctx) => {
       world.fixedUpdate({ ...ctx, physics: null });
     },
     render: ({ graphics, input, width, height, alpha, dt, time, tick }) => {
+      worldCamera.fitToRect(WORLD_W, WORLD_H, width, height, {
+        maxViewportW: MAX_VIEW_W,
+        maxViewportH: MAX_VIEW_H,
+      });
       uiCamera.x = width * 0.5;
       uiCamera.y = height * 0.5;
 

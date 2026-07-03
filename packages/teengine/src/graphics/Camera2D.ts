@@ -1,5 +1,16 @@
 import { Mat3 } from "../math/index.js";
 
+export type FitToRectMode = "contain" | "cover";
+
+export type FitToRectOptions = {
+  /** Uniform scale mode. Default `contain` (full rect visible, letterboxed). */
+  mode?: FitToRectMode;
+  /** Cap zoom so the world width maps to at most this many viewport pixels. */
+  maxViewportW?: number;
+  /** Cap zoom so the world height maps to at most this many viewport pixels. */
+  maxViewportH?: number;
+};
+
 /** 2D camera with center anchor — (x, y) is the world point at the viewport center. Y-down world. */
 export class Camera2D {
   x = 0;
@@ -13,6 +24,33 @@ export class Camera2D {
   lookAt(x: number, y: number): void {
     this.x = x;
     this.y = y;
+  }
+
+  /**
+   * Uniformly scale and center the camera on a fixed world rectangle.
+   * Updates zoom and look-at to the world center.
+   */
+  fitToRect(
+    worldW: number,
+    worldH: number,
+    viewportW: number,
+    viewportH: number,
+    options: FitToRectOptions = {},
+  ): void {
+    const mode = options.mode ?? "contain";
+    const scaleX = viewportW / worldW;
+    const scaleY = viewportH / worldH;
+    let zoom = mode === "contain" ? Math.min(scaleX, scaleY) : Math.max(scaleX, scaleY);
+
+    if (options.maxViewportW !== undefined) {
+      zoom = Math.min(zoom, options.maxViewportW / worldW);
+    }
+    if (options.maxViewportH !== undefined) {
+      zoom = Math.min(zoom, options.maxViewportH / worldH);
+    }
+
+    this.zoom = zoom;
+    this.lookAt(worldW * 0.5, worldH * 0.5);
   }
 
   /** World → clip-space matrix for the given viewport size. */
