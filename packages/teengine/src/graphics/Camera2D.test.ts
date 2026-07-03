@@ -34,4 +34,27 @@ describe("Camera2D", () => {
     expect(back.x).toBeCloseTo(world.x, 4);
     expect(back.y).toBeCloseTo(world.y, 4);
   });
+
+  it("fitToRect uses contain scaling without stretch", () => {
+    const camera = new Camera2D();
+    camera.fitToRect(800, 600, 1600, 900);
+
+    expect(camera.zoom).toBeCloseTo(1.5, 4);
+    expect(camera.x).toBe(400);
+    expect(camera.y).toBe(300);
+  });
+
+  it("fitToRect caps zoom to max viewport size", () => {
+    const camera = new Camera2D();
+    camera.fitToRect(800, 600, 2560, 1440, { maxViewportW: 1280, maxViewportH: 960 });
+
+    expect(camera.zoom).toBeCloseTo(1.6, 4);
+  });
+
+  it("fitToRect scales down for small viewports", () => {
+    const camera = new Camera2D();
+    camera.fitToRect(800, 600, 400, 300);
+
+    expect(camera.zoom).toBeCloseTo(0.5, 4);
+  });
 });
