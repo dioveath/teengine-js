@@ -2,6 +2,7 @@ import type { LayerSortMode } from "../graphics/LayerRegistry.js";
 import type { PhysicsBridge } from "../physics/PhysicsBridge.js";
 import type { TransformSnapshot } from "./interpolation.js";
 import { createEntity, hasPhysics, type Entity, type EntityId, type SpawnConfig } from "./Entity.js";
+import { matchesEntityQuery, type EntityQuery } from "./query.js";
 import type { FixedSystem, RenderSystem } from "./System.js";
 
 type LayerBucket = {
@@ -62,6 +63,17 @@ export class World {
   /** All entities in spawn order. */
   getAll(): readonly Entity[] {
     return [...this.entities.values()];
+  }
+
+  /** Filter entities by tags and component presence. */
+  query(filter: EntityQuery): readonly Entity[] {
+    const results: Entity[] = [];
+    for (const entity of this.entities.values()) {
+      if (matchesEntityQuery(entity, filter)) {
+        results.push(entity);
+      }
+    }
+    return results;
   }
 
   remove(id: EntityId): void {

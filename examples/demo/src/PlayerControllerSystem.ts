@@ -11,8 +11,7 @@ export class PlayerControllerSystem implements FixedSystem {
     const { world, input, physics } = ctx;
     if (!physics) return;
 
-    for (const entity of world.getAll()) {
-      if (!entity.active || !entity.tags.has(DemoTags.player) || !entity.rigidBody) continue;
+    for (const entity of world.query({ withTags: [DemoTags.player], with: ["rigidBody"], active: true })) {
 
       const dx = input.actionAxis("move_left", "move_right");
       const vel = physics.getLinearVelocity(entity.id);

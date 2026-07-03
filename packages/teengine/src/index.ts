@@ -40,6 +40,8 @@ export type {
   RenderSystem,
   FixedSystemContext,
   RenderSystemContext,
+  EntityQuery,
+  EntityComponentKey,
 } from "./ecs/index.js";
 export { SpinSystem } from "./ecs/systems/SpinSystem.js";
 export { CameraFollowSystem } from "./ecs/systems/CameraFollowSystem.js";
