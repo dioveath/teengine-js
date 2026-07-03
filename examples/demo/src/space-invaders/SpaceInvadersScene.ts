@@ -59,13 +59,14 @@ function spawnInvaders(world: World, atlas: SpaceInvadersAtlas, state: SpaceInva
   }
 }
 
-function spawnHudHearts(world: World, atlas: SpaceInvadersAtlas, lives: number): void {
-  for (let i = 0; i < lives; i++) {
-    world.spawn({
+function spawnHudHearts(world: World, atlas: SpaceInvadersAtlas, state: SpaceInvadersState): void {
+  for (let i = 0; i < state.lives; i++) {
+    const heartId = world.spawn({
       name: `Life-${i}`,
       transform: { x: 24 + i * 36, y: 24 },
       sprite: { region: atlas.uiHeart, layer: Layers.ui, origin: { x: 0, y: 0 } },
     });
+    state.hudHeartIds.push(heartId);
   }
 }
 
@@ -88,17 +89,16 @@ export function createSpaceInvadersScene(engine: Engine, atlas: SpaceInvadersAtl
     name: "Player",
     transform: { x: WORLD_W * 0.5, y: PLAYER_Y },
     sprite: { region: atlas.player, layer: Layers.world },
-    player: { _tag: "player" },
   });
 
   spawnInvaders(world, atlas, state);
-  spawnHudHearts(world, atlas, state.lives);
+  spawnHudHearts(world, atlas, state);
 
   const hud = document.getElementById("hud");
 
-  world.addFixedSystem(new PlayerShipSystem(state, atlas.bullet));
+  world.addFixedSystem(new PlayerShipSystem(playerId, state, atlas.bullet));
   world.addFixedSystem(new InvaderFormationSystem(state, atlas));
-  world.addFixedSystem(new CombatSystem(state, atlas.enemyBullet));
+  world.addFixedSystem(new CombatSystem(playerId, state, atlas.enemyBullet));
   world.addRenderSystem(new StarfieldRenderSystem(engine.graphics));
   world.addRenderSystem(new WorldEntityRenderSystem(engine.graphics));
   world.addRenderSystem(

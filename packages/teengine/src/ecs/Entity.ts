@@ -70,14 +70,8 @@ export type ShapeComponent = (ShapeRect | ShapeCircle | ShapeLine) & {
   layer: LayerName;
 };
 
-/** Marker: entity is the player character. */
-export type PlayerTag = { readonly _tag: "player" };
-
 /** Marker: camera follows this entity. */
 export type CameraTargetTag = { readonly _tag: "cameraTarget" };
-
-/** Marker: collectable pickup (demo / game-specific pattern). */
-export type CoinTag = { readonly _tag: "coin" };
 
 /** Marker: receive collision events as `self` when `emitEvents` is enabled. */
 export type CollisionListenerTag = { readonly _tag: "collisionListener" };
@@ -95,9 +89,7 @@ export type Entity = {
   collider?: ColliderComponent;
   collision?: CollisionComponent;
   rigidBody?: RigidBodyComponent;
-  player?: PlayerTag;
   cameraTarget?: CameraTargetTag;
-  coin?: CoinTag;
   collisionListener?: CollisionListenerTag;
   spin?: SpinComponent;
 };
@@ -110,9 +102,7 @@ export type SpawnConfig = {
   collider?: ColliderComponent;
   collision?: CollisionComponent;
   rigidBody?: RigidBodyComponent;
-  player?: PlayerTag;
   cameraTarget?: CameraTargetTag;
-  coin?: CoinTag;
   collisionListener?: CollisionListenerTag;
   spin?: SpinComponent;
 };
@@ -128,9 +118,7 @@ export function createEntity(id: EntityId, config: SpawnConfig): Entity {
     collider: config.collider,
     collision: config.collision,
     rigidBody: config.rigidBody,
-    player: config.player,
     cameraTarget: config.cameraTarget,
-    coin: config.coin,
     collisionListener: config.collisionListener,
     spin: config.spin,
   };

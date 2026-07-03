@@ -64,6 +64,27 @@ export class World {
     return [...this.entities.values()];
   }
 
+  /** Active entities matching a predicate. */
+  query(predicate: (entity: Entity) => boolean): Entity[] {
+    const out: Entity[] = [];
+    for (const entity of this.entities.values()) {
+      if (entity.active && predicate(entity)) {
+        out.push(entity);
+      }
+    }
+    return out;
+  }
+
+  /** First active entity matching a predicate. */
+  find(predicate: (entity: Entity) => boolean): Entity | undefined {
+    for (const entity of this.entities.values()) {
+      if (entity.active && predicate(entity)) {
+        return entity;
+      }
+    }
+    return undefined;
+  }
+
   remove(id: EntityId): void {
     this.physics?.unregister(id);
     this.entities.delete(id);
