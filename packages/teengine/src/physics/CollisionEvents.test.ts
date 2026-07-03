@@ -2,7 +2,11 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { createEntity } from "../ecs/Entity.js";
 import { PhysicsBridge } from "./PhysicsBridge.js";
 import { PhysicsWorld } from "./PhysicsWorld.js";
-import { CollisionGroups, layers } from "./CollisionLayers.js";
+import { layers } from "./CollisionLayers.js";
+
+/** Test-local collision layer bits (games define their own). */
+const TEST_PLAYER = 1 << 1;
+const TEST_PICKUP = 1 << 2;
 
 describe("Collision events", () => {
   let physics: PhysicsWorld;
@@ -19,10 +23,9 @@ describe("Collision events", () => {
       collider: { shape: { kind: "box", width: 32, height: 32 } },
       collision: {
         response: "solid",
-        layers: layers(CollisionGroups.PLAYER, CollisionGroups.PICKUP),
+        layers: layers(TEST_PLAYER, TEST_PICKUP),
       },
       rigidBody: { type: "dynamic" },
-      player: { _tag: "player" },
     });
 
     const coin = createEntity(2, {
@@ -30,9 +33,8 @@ describe("Collision events", () => {
       collider: { shape: { kind: "ball", radius: 12 } },
       collision: {
         response: "sensor",
-        layers: layers(CollisionGroups.PICKUP, CollisionGroups.PLAYER),
+        layers: layers(TEST_PICKUP, TEST_PLAYER),
       },
-      coin: { _tag: "coin" },
     });
 
     bridge.register(player);

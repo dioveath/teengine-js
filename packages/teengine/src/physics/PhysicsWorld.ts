@@ -23,6 +23,8 @@ type EntityPhysicsEntry = {
   bodyHandle: RigidBodyHandle;
   colliderHandle: ColliderHandle;
   simulates: boolean;
+  /** Engine-space offset baked into the body's translation at creation; subtracted back out on read. */
+  offset: { x: number; y: number };
 };
 
 export class PhysicsWorld {
@@ -111,6 +113,7 @@ export class PhysicsWorld {
       bodyHandle,
       colliderHandle,
       simulates: isSimulatedBody(entity),
+      offset,
     });
 
     return bodyHandle;
@@ -157,10 +160,20 @@ export class PhysicsWorld {
     return rapierToEngine(t.x, t.y, body.rotation());
   }
 
+  /**
+   * Entity's transform derived from its body, with the creation-time
+   * `collider.offset` subtracted back out so the entity's own transform
+   * (not the collider's) is returned. Returns `null` if the entity has no body.
+   */
   getTransformForEntity(entityId: EntityId): { x: number; y: number; rotation: number } | null {
     const entry = this.entityPhysics.get(entityId);
     if (!entry) return null;
-    return this.getTransform(entry.bodyHandle);
+    const body = this.getTransform(entry.bodyHandle);
+    return {
+      x: body.x - entry.offset.x,
+      y: body.y - entry.offset.y,
+      rotation: body.rotation,
+    };
   }
 
   setLinearVelocity(handle: RigidBodyHandle, vx: number, vy: number): void {

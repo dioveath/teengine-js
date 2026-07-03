@@ -29,9 +29,13 @@ export function resolveCollision(entity: Entity): ResolvedCollision | null {
   };
 }
 
-export function shouldEmitAsSelf(entity: Entity, collision: ResolvedCollision): boolean {
-  if (!collision.emitEvents) return false;
-  if (entity.collisionListener) return true;
-  if (collision.response === "sensor") return true;
-  return entity.collision?.emitEvents === true;
+/**
+ * True if this entity should appear as `event.self` for a collision it's involved in.
+ *
+ * Rapier only queues collision events for a collider whose resolved `emitEvents`
+ * is true in the first place (see `PhysicsWorld.createPhysicsForEntity`), so once
+ * that guard passes, the entity is always the `self` side.
+ */
+export function shouldEmitAsSelf(_entity: Entity, collision: ResolvedCollision): boolean {
+  return collision.emitEvents;
 }
