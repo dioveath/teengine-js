@@ -25,29 +25,48 @@ All conversion happens in `PhysicsWorld` — game code stays in engine coordinat
 
 ## Usage
 
+`PhysicsWorld` wraps Rapier; `PhysicsBridge` is the entity-facing layer `World` uses.
+`World` takes the bridge in its constructor — there is no `attachPhysics()` call.
+
 ```ts
-const physics = await PhysicsWorld.create({ gravityY: 980 });
-world.attachPhysics(physics);
+const physicsWorld = await PhysicsWorld.create({ gravityY: 980 });
+const physics = new PhysicsBridge(physicsWorld);
+const world = new World(physics);
 
 // Static ground (engine coords: x,y = top-left)
 physics.createStaticBox(0, 300, 2000, 40);
 
-world.spawn({
+const playerId = world.spawn({
   transform: { x: 400, y: 286 },
-  rigidBody: {
-    type: "dynamic",
-    collider: { kind: "box", width: 28, height: 28 },
-    lockRotation: true,
-  },
+  // collider, collision, and rigidBody are separate sibling components —
+  // collider is never nested inside rigidBody.
+  collider: { shape: { kind: "box", width: 28, height: 28 } },
+  collision: { response: "solid" },
+  rigidBody: { type: "dynamic", lockRotation: true },
 });
 
-fixedUpdate: ({ dt, input }) => {
-  physics.setLinearVelocity(handle, dx * speed, vy);
-  physics.applyImpulse(handle, 0, jumpImpulse);
-  physics.step(dt);
-  world.syncFromPhysics();
-};
+// Movement reads/writes velocity by entity id, through the bridge —
+// never through a raw Rapier handle.
+engine.setLoop({
+  fixedUpdate: (ctx) => {
+    const dx = ctx.input.actionAxis("move_left", "move_right");
+    const vel = physics.getLinearVelocity(playerId);
+    physics.setLinearVelocity(playerId, dx * 220, vel.y);
+    if (ctx.input.actionPressed("jump")) physics.applyImpulse(playerId, 0, 280);
+
+    // World.fixedUpdate runs snapshot → your fixed systems → physics.step()
+    // → sync → your post-physics systems. Do not call physics.step() yourself.
+    world.fixedUpdate({ ...ctx, physics });
+  },
+  render: (ctx) => {
+    engine.graphics.beginFrame(Color.hex("#0d1117"));
+    world.render({ ...ctx, physics });
+    engine.graphics.endFrame();
+  },
+});
 ```
+
+See `examples/demo/src/PlayerControllerSystem.ts` and `DemoScene.ts` for the same pattern as a reusable `FixedSystem`.
 
 ## RigidBodyComponent
 
@@ -60,17 +79,16 @@ Collider and collision policy live on separate components (`collider`, `collisio
 
 ## Next phases
 
-### Phase 2 — Events
-- `PhysicsWorld.onCollisionEnter` / `Exit` via Rapier event queue
+### Events ✅
+- Collision enter/exit via Rapier event queue
 - Sensor colliders for triggers
 
-### Phase 3 — Character controller
-- Rapier `KinematicCharacterController` for platformer movement
-- Replace impulse-based jump with controller API
-
-### Phase 4 — Performance
+### Performance
 - Reuse translation buffers (avoid alloc per body per frame)
 - Optional Web Worker for `world.step()`
+
+### Movement (not engine scope)
+Platformer / character movement is built in **your** `FixedSystem` using the physics API above (`setLinearVelocity`, `applyImpulse`, `kinematicPosition`, etc.). See `examples/demo/PlayerControllerSystem.ts` for a starting point.
 
 ## Vite config
 

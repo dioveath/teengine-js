@@ -31,12 +31,15 @@ teengine-js/
 
 ## Design principles
 
+See [MODULES.md](./MODULES.md) for the engine boundary.
+
 | Concern | Where it lives |
 |---------|----------------|
-| **Reusable engine** | `packages/teengine` |
-| **Game-specific logic** | `examples/*` (PlayerController, demo atlas, scenes) |
+| **Engine** | `packages/teengine` — run, draw, simulate, input |
+| **Reference implementations** | `examples/*` (player controller, pickup, scenes) — copy and adapt |
+| **Your game** | Your app — systems, content, feel |
 | **GPU internals** | `packages/teengine/src/gpu` — private, not exported |
-| **Editor / UI** | Out of scope — use your own UI framework in the app |
+| **Editor / UI** | Out of scope — use your own UI framework |
 
 ## Public API (`teengine`)
 
@@ -57,21 +60,7 @@ import {
 } from "teengine";
 ```
 
-### Future subpath exports (optional)
-
-If the API grows, add without breaking the main entry:
-
-```json
-{
-  "exports": {
-    ".": "./dist/index.js",
-    "./systems": "./dist/systems/index.js",
-    "./physics": "./dist/physics/index.js"
-  }
-}
-```
-
-Only split when consumers need tree-shaking or clearer boundaries — not required yet.
+Single entry point. No subpath exports unless the core API genuinely outgrows one bundle.
 
 ## Consuming the package
 
