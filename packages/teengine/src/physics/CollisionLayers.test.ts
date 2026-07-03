@@ -1,30 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { CollisionGroups, COLLIDE_ALL, layers, toInteractionGroups } from "./CollisionLayers.js";
-
-describe("CollisionGroups", () => {
-  it("assigns every preset a distinct bit", () => {
-    const values = Object.values(CollisionGroups);
-    const unique = new Set(values);
-    expect(unique.size).toBe(values.length);
-  });
-
-  it("packs each preset into a single bit", () => {
-    for (const value of Object.values(CollisionGroups)) {
-      expect(value & (value - 1)).toBe(0);
-    }
-  });
-});
+import { COLLIDE_ALL, layers, toInteractionGroups } from "./CollisionLayers.js";
 
 describe("toInteractionGroups", () => {
   it("packs category into the high 16 bits and mask into the low 16 bits", () => {
-    const packed = toInteractionGroups(layers(CollisionGroups.PLAYER, CollisionGroups.ENEMY));
-    expect(packed >>> 16).toBe(CollisionGroups.PLAYER);
-    expect(packed & 0xffff).toBe(CollisionGroups.ENEMY);
+    const category = 1 << 1;
+    const mask = 1 << 4;
+    const packed = toInteractionGroups(layers(category, mask));
+    expect(packed >>> 16).toBe(category);
+    expect(packed & 0xffff).toBe(mask);
   });
 
   it("COLLIDE_ALL collides with every category and mask bit", () => {
     const packed = toInteractionGroups(COLLIDE_ALL);
     expect(packed >>> 16).toBe(0xffff);
     expect(packed & 0xffff).toBe(0xffff);
+  });
+});
+
+describe("layers", () => {
+  it("returns a category/mask pair", () => {
+    expect(layers(2, 6)).toEqual({ category: 2, mask: 6 });
   });
 });
