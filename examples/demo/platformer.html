@@ -66,11 +66,8 @@
     <div id="hud">WASD / Arrows move · Space jump · Mouse debug</div>
     <canvas id="canvas" tabindex="0"></canvas>
     <div id="fallback">
-      <h1>WebGPU not available</h1>
-      <p>
-        TeEngine requires a browser with WebGPU support (Chrome 113+, Edge 113+,
-        or Firefox Nightly with the flag enabled).
-      </p>
+      <h1 id="fallback-title">Unable to start demo</h1>
+      <p id="fallback-detail"></p>
     </div>
     <script type="module" src="/src/platformer/main.ts"></script>
   </body>
