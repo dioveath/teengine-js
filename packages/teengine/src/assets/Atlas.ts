@@ -16,10 +16,3 @@ export type AtlasRegion = {
   width: number;
   height: number;
 };
-
-export type DemoAtlas = {
-  player: AtlasRegion;
-  enemy: AtlasRegion;
-  coin: AtlasRegion;
-  uiHeart: AtlasRegion;
-};

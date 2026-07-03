@@ -11,7 +11,16 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173 — click the canvas to focus.
+Open http://localhost:5173 — a Steam-style store page listing all demo games.
+
+## Demos
+
+| Game | Description | Controls |
+|------|-------------|----------|
+| **Space Invaders** | Classic arcade shooter with marching formations | Arrow / A D move, Space fire |
+| **Platformer Prototype** | Physics sandbox with coins and enemies | WASD / Arrows move, Space jump |
+
+Each demo opens in its own page. Use **← Store** to return to the launcher.
 
 ## Use in your project
 
@@ -30,14 +39,6 @@ const world = new World(physics);
 
 See [docs/PACKAGE.md](./docs/PACKAGE.md) for monorepo layout and [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) for engine design.
 
-## Demo controls
-
-| Input | Action |
-|-------|--------|
-| Arrow / WASD | Move player |
-| Space / Up | Jump |
-| Mouse | Debug circle in world |
-
 ## Scripts
 
 | Command | Description |
@@ -51,7 +52,7 @@ See [docs/PACKAGE.md](./docs/PACKAGE.md) for monorepo layout and [docs/ARCHITECT
 
 ```
 packages/teengine/   → publishable library (`teengine`)
-examples/demo/       → Vite demo app
+examples/demo/       → Vite demo store + game pages
 docs/                → architecture + package docs
 legacy/              → original Canvas 2D prototype
 ```

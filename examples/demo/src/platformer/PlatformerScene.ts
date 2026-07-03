@@ -1,15 +1,14 @@
-import type { DemoAtlas } from "teengine";
 import {
   CameraFollowSystem,
   CollisionGroups,
   Color,
+  SpinSystem,
+  World,
+  WorldEntityRenderSystem,
   createUiCamera,
   createWorldCamera,
   Layers,
   layers,
-  SpinSystem,
-  World,
-  WorldEntityRenderSystem,
   type Engine,
   type EntityId,
 } from "teengine";
@@ -17,25 +16,26 @@ import type { PhysicsBridge } from "teengine";
 import { CoinPickupSystem } from "./CoinPickupSystem.js";
 import { DebugOverlaySystem } from "./DebugOverlaySystem.js";
 import { PlayerControllerSystem } from "./PlayerControllerSystem.js";
+import type { PlatformerAtlas } from "./createPlatformerAtlas.js";
 
 export const GROUND_Y = 300;
 export const PLAYER_SIZE = 28;
 
-export type DemoSceneContext = {
+export type PlatformerSceneContext = {
   engine: Engine;
   world: World;
   physics: PhysicsBridge;
-  atlas: DemoAtlas;
+  atlas: PlatformerAtlas;
   playerId: EntityId;
   worldCamera: ReturnType<typeof createWorldCamera>;
   uiCamera: ReturnType<typeof createUiCamera>;
 };
 
-export function createDemoScene(
+export function createPlatformerScene(
   engine: Engine,
   physics: PhysicsBridge,
-  atlas: DemoAtlas,
-): DemoSceneContext {
+  atlas: PlatformerAtlas,
+): PlatformerSceneContext {
   const canvas = engine.graphics.viewport;
   const world = new World(physics);
 
@@ -135,7 +135,7 @@ export function createDemoScene(
   };
 }
 
-export function bindDemoLoop(scene: DemoSceneContext): void {
+export function bindPlatformerLoop(scene: PlatformerSceneContext): void {
   const { engine, world, physics, uiCamera } = scene;
 
   engine.setLoop({

@@ -3,42 +3,633 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>TeEngine Demo</title>
+    <title>TeEngine Store</title>
     <style>
+      :root {
+        --bg-deep: #0e1419;
+        --bg-panel: #1b2838;
+        --bg-card: #16202d;
+        --bg-card-hover: #1a2a3a;
+        --accent: #66c0f4;
+        --accent-dim: #4a9fd4;
+        --text: #c7d5e0;
+        --text-dim: #8f98a0;
+        --green: #5ba32b;
+        --tag-bg: rgba(102, 192, 244, 0.15);
+        --border: rgba(255, 255, 255, 0.08);
+        --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       html,
       body {
         margin: 0;
-        height: 100%;
-        overflow: hidden;
-        background: #0d1117;
+        min-height: 100%;
+        background:
+          radial-gradient(ellipse 120% 80% at 50% -20%, #1a3a52 0%, transparent 55%),
+          linear-gradient(180deg, #0a1018 0%, var(--bg-deep) 40%, #0a0f14 100%);
+        color: var(--text);
+        font-family: "Motiva Sans", "Segoe UI", system-ui, sans-serif;
       }
 
-      canvas {
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .store {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 0 24px 64px;
+      }
+
+      /* Header */
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 0 24px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 28px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .brand-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #1e90ff 0%, #66c0f4 50%, #1b4d6e 100%);
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        font-size: 14px;
+        letter-spacing: -0.5px;
+        box-shadow: 0 4px 12px rgba(30, 144, 255, 0.35);
+      }
+
+      .brand h1 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+
+      .brand span {
         display: block;
-        width: 100%;
-        height: 100%;
-        outline: none;
+        font-size: 12px;
+        color: var(--text-dim);
+        font-weight: 400;
+        margin-top: 2px;
       }
 
-      #fallback {
+      .nav {
+        display: flex;
+        gap: 8px;
+      }
+
+      .nav button {
+        background: transparent;
+        border: 1px solid transparent;
+        color: var(--text-dim);
+        padding: 8px 14px;
+        border-radius: 4px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: color 0.15s, background 0.15s, border-color 0.15s;
+      }
+
+      .nav button:hover,
+      .nav button.active {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.06);
+        border-color: var(--border);
+      }
+
+      .search {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 8px 12px;
+        min-width: 220px;
+      }
+
+      .search input {
+        background: none;
+        border: none;
+        outline: none;
+        color: var(--text);
+        font-size: 13px;
+        width: 100%;
+      }
+
+      .search input::placeholder {
+        color: var(--text-dim);
+      }
+
+      /* Featured */
+      .featured {
+        position: relative;
+        border-radius: 6px;
+        overflow: hidden;
+        margin-bottom: 36px;
+        min-height: 280px;
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border);
+      }
+
+      .featured-art {
+        position: relative;
+        background: linear-gradient(160deg, #0d1117 0%, #1a1030 50%, #0a1628 100%);
+        overflow: hidden;
+      }
+
+      .featured-art::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 30% 40%, rgba(247, 129, 102, 0.25) 0%, transparent 45%),
+          radial-gradient(circle at 70% 60%, rgba(102, 192, 244, 0.2) 0%, transparent 40%);
+      }
+
+      .featured-pixel-scene {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        padding: 32px;
+      }
+
+      .invader-row {
+        display: flex;
+        gap: 10px;
+      }
+
+      .pixel-invader {
+        width: 28px;
+        height: 20px;
+        background: #f78166;
+        clip-path: polygon(20% 0%, 80% 0%, 100% 30%, 100% 70%, 80% 100%, 20% 100%, 0% 70%, 0% 30%);
+        animation: invader-bob 1.2s ease-in-out infinite;
+      }
+
+      .pixel-invader:nth-child(odd) {
+        animation-delay: 0.15s;
+      }
+
+      .pixel-ship {
+        width: 36px;
+        height: 20px;
+        background: #3fbf7f;
+        clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+        margin-top: 8px;
+      }
+
+      @keyframes invader-bob {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-4px);
+        }
+      }
+
+      .featured-info {
+        background: linear-gradient(135deg, #1b2838 0%, #16202d 100%);
+        padding: 32px 28px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .featured-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--accent);
+        margin-bottom: 8px;
+      }
+
+      .featured-info h2 {
+        margin: 0 0 10px;
+        font-size: 28px;
+        font-weight: 600;
+      }
+
+      .featured-info p {
+        margin: 0 0 20px;
+        color: var(--text-dim);
+        line-height: 1.55;
+        font-size: 14px;
+      }
+
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 20px;
+      }
+
+      .tag {
+        font-size: 11px;
+        padding: 4px 10px;
+        border-radius: 2px;
+        background: var(--tag-bg);
+        color: var(--accent);
+        border: 1px solid rgba(102, 192, 244, 0.25);
+      }
+
+      .btn-play {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: fit-content;
+        padding: 12px 28px;
+        background: linear-gradient(180deg, #75b022 0%, var(--green) 50%, #4c6b16 100%);
+        border: none;
+        border-radius: 3px;
+        color: #d2efa9;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        transition: filter 0.15s, transform 0.1s;
+      }
+
+      .btn-play:hover {
+        filter: brightness(1.12);
+      }
+
+      .btn-play:active {
+        transform: translateY(1px);
+      }
+
+      /* Section */
+      .section-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+
+      .section-head h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 400;
+        color: var(--text);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .section-head span {
+        font-size: 12px;
+        color: var(--text-dim);
+      }
+
+      /* Game grid */
+      .library {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 16px;
+      }
+
+      .game-card {
+        display: grid;
+        grid-template-columns: 148px 1fr;
+        background: var(--bg-card);
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+        cursor: pointer;
+      }
+
+      .game-card:hover {
+        background: var(--bg-card-hover);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+      }
+
+      .game-card.hidden {
         display: none;
-        color: #f0f6fc;
-        font-family: system-ui, sans-serif;
-        padding: 2rem;
-        max-width: 40rem;
-        line-height: 1.5;
+      }
+
+      .cover {
+        position: relative;
+        min-height: 88px;
+        overflow: hidden;
+      }
+
+      .cover-platformer {
+        background: linear-gradient(180deg, #1a2744 0%, #0d1117 70%, #2d3f5c 70%, #1e2a3d 100%);
+      }
+
+      .cover-platformer::after {
+        content: "";
+        position: absolute;
+        bottom: 22px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 22px;
+        height: 22px;
+        background: #58a6ff;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 3px;
+        box-shadow: 0 0 12px rgba(88, 166, 255, 0.5);
+      }
+
+      .cover-platformer .coin {
+        position: absolute;
+        top: 28px;
+        left: 38px;
+        width: 14px;
+        height: 14px;
+        background: #ffd700;
+        border-radius: 50%;
+        box-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+      }
+
+      .cover-platformer .enemy {
+        position: absolute;
+        bottom: 22px;
+        right: 32px;
+        width: 20px;
+        height: 20px;
+        background: #f78166;
+        border: 2px solid rgba(0, 0, 0, 0.3);
+        border-radius: 3px;
+      }
+
+      .cover-invaders {
+        background: radial-gradient(ellipse at center, #12182a 0%, #060a12 100%);
+      }
+
+      .cover-invaders .stars {
+        position: absolute;
+        inset: 0;
+        background-image:
+          radial-gradient(1px 1px at 20% 30%, #fff8, transparent),
+          radial-gradient(1px 1px at 60% 70%, #fff6, transparent),
+          radial-gradient(1.5px 1.5px at 80% 20%, #fff8, transparent),
+          radial-gradient(1px 1px at 40% 80%, #fff5, transparent);
+      }
+
+      .cover-invaders .mini-invaders {
+        position: absolute;
+        top: 22px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 6px;
+      }
+
+      .cover-invaders .mini-invader {
+        width: 14px;
+        height: 10px;
+        background: #f78166;
+        border-radius: 1px;
+      }
+
+      .cover-invaders .mini-ship {
+        position: absolute;
+        bottom: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 20px;
+        height: 12px;
+        background: #3fbf7f;
+        clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+      }
+
+      .card-body {
+        padding: 14px 16px 14px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .card-body h4 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 500;
+      }
+
+      .card-body p {
+        margin: 0;
+        font-size: 12px;
+        color: var(--text-dim);
+        line-height: 1.45;
+        flex: 1;
+      }
+
+      .card-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+
+      .card-tags .tag {
+        font-size: 10px;
+        padding: 2px 7px;
+      }
+
+      .card-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 4px;
+      }
+
+      .btn-play-sm {
+        padding: 6px 16px;
+        font-size: 12px;
+      }
+
+      .price-free {
+        font-size: 12px;
+        color: var(--green);
+        font-weight: 600;
+      }
+
+      .footer {
+        margin-top: 48px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--text-dim);
+        font-size: 12px;
+      }
+
+      .footer a {
+        color: var(--accent);
+      }
+
+      @media (max-width: 760px) {
+        .header {
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+
+        .search {
+          order: 3;
+          width: 100%;
+          min-width: 0;
+        }
+
+        .featured {
+          grid-template-columns: 1fr;
+        }
+
+        .library {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>
   <body>
-    <canvas id="canvas" tabindex="0"></canvas>
-    <div id="fallback">
-      <h1>WebGPU not available</h1>
-      <p>
-        TeEngine requires a browser with WebGPU support (Chrome 113+, Edge 113+,
-        or Firefox Nightly with the flag enabled).
-      </p>
+    <div class="store">
+      <header class="header">
+        <div class="brand">
+          <div class="brand-icon">TE</div>
+          <div>
+            <h1>TeEngine Store</h1>
+            <span>WebGPU game demos</span>
+          </div>
+        </div>
+        <nav class="nav" aria-label="Categories">
+          <button type="button" class="active" data-filter="all">All</button>
+          <button type="button" data-filter="arcade">Arcade</button>
+          <button type="button" data-filter="platformer">Platformer</button>
+        </nav>
+        <label class="search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M20 20l-4-4" />
+          </svg>
+          <input id="search" type="search" placeholder="Search demos…" autocomplete="off" />
+        </label>
+      </header>
+
+      <section class="featured" aria-label="Featured demo">
+        <div class="featured-art">
+          <div class="featured-pixel-scene" aria-hidden="true">
+            <div class="invader-row">
+              <div class="pixel-invader"></div>
+              <div class="pixel-invader"></div>
+              <div class="pixel-invader"></div>
+              <div class="pixel-invader"></div>
+              <div class="pixel-invader"></div>
+            </div>
+            <div class="invader-row">
+              <div class="pixel-invader" style="background: #a371f7"></div>
+              <div class="pixel-invader" style="background: #a371f7"></div>
+              <div class="pixel-invader" style="background: #a371f7"></div>
+            </div>
+            <div class="pixel-ship"></div>
+          </div>
+        </div>
+        <div class="featured-info">
+          <div class="featured-label">Featured</div>
+          <h2>Space Invaders</h2>
+          <p>
+            Classic arcade shooter rebuilt with TeEngine — marching alien formations,
+            enemy fire, score tracking, and procedural pixel sprites. No physics engine needed.
+          </p>
+          <div class="tags">
+            <span class="tag">Arcade</span>
+            <span class="tag">Shooter</span>
+            <span class="tag">WebGPU</span>
+          </div>
+          <a class="btn-play" href="/space-invaders.html">Play now</a>
+        </div>
+      </section>
+
+      <div class="section-head">
+        <h3>Demo library</h3>
+        <span id="count">2 titles</span>
+      </div>
+
+      <div class="library" id="library">
+        <a
+          class="game-card"
+          href="/space-invaders.html"
+          data-title="space invaders arcade shooter"
+          data-tags="arcade"
+        >
+          <div class="cover cover-invaders">
+            <div class="stars"></div>
+            <div class="mini-invaders">
+              <div class="mini-invader"></div>
+              <div class="mini-invader"></div>
+              <div class="mini-invader"></div>
+              <div class="mini-invader"></div>
+            </div>
+            <div class="mini-ship"></div>
+          </div>
+          <div class="card-body">
+            <h4>Space Invaders</h4>
+            <p>Defend Earth from descending invader waves. Arrow keys to move, Space to fire.</p>
+            <div class="card-tags">
+              <span class="tag">Arcade</span>
+              <span class="tag">Shooter</span>
+            </div>
+            <div class="card-actions">
+              <span class="btn-play btn-play-sm">Play</span>
+              <span class="price-free">Free</span>
+            </div>
+          </div>
+        </a>
+
+        <a
+          class="game-card"
+          href="/platformer.html"
+          data-title="platformer prototype physics jump"
+          data-tags="platformer"
+        >
+          <div class="cover cover-platformer">
+            <div class="coin"></div>
+            <div class="enemy"></div>
+          </div>
+          <div class="card-body">
+            <h4>Platformer Prototype</h4>
+            <p>Side-scrolling physics sandbox — move, jump, collect coins, and explore Rapier collision.</p>
+            <div class="card-tags">
+              <span class="tag">Platformer</span>
+              <span class="tag">Physics</span>
+            </div>
+            <div class="card-actions">
+              <span class="btn-play btn-play-sm">Play</span>
+              <span class="price-free">Free</span>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <footer class="footer">
+        Built with <a href="https://github.com/dioveath/teengine-js">TeEngine</a> — WebGPU + TypeScript.
+        Requires a WebGPU-capable browser.
+      </footer>
     </div>
-    <script type="module" src="/src/main.ts"></script>
+
+    <script type="module" src="/src/launcher/main.ts"></script>
   </body>
 </html>
