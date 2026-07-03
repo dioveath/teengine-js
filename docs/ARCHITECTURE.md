@@ -1,6 +1,8 @@
 # TeEngine Architecture
 
-TeEngine is a **simple 2D TypeScript game engine** with **WebGPU** rendering, **systems-based ECS**, and **Rapier physics**. It ships as the **`teengine` npm package** — see [PACKAGE.md](./PACKAGE.md) for layout.
+TeEngine is a **simple 2D TypeScript game engine** with **WebGPU** rendering, **systems-based ECS**, and **Rapier physics**. It ships as the **`teengine` npm package**.
+
+See [MODULES.md](./MODULES.md) for what belongs in the engine vs your game vs examples.
 
 ## Layer stack
 
@@ -26,7 +28,7 @@ PhysicsBridge (Rapier 2D) ←→ World.fixedUpdate()
 
 ## ECS + Systems
 
-Entities are component bags. Behavior lives in **systems**:
+Entities are component bags. Behavior lives in **systems** you write:
 
 ```ts
 world.addFixedSystem(new SpinSystem());
@@ -34,7 +36,7 @@ world.addRenderSystem(new WorldEntityRenderSystem(graphics));
 world.addRenderSystem(new CameraFollowSystem(worldCamera));
 ```
 
-Game-specific systems (e.g. `PlayerControllerSystem`) live in your app, not the package.
+Built-in systems (`SpinSystem`, `CameraFollowSystem`, `WorldEntityRenderSystem`) are small rendering/utility helpers. **Movement, AI, game rules** — your systems. See `examples/demo/PlayerControllerSystem.ts` for one approach.
 
 ## Game loop
 
@@ -72,6 +74,8 @@ packages/teengine/src/
 
 ## Roadmap
 
+### Done
+
 - [x] WebGPU + cameras + layers + sprites
 - [x] Entity system + fixed timestep + systems
 - [x] Input system
@@ -81,4 +85,14 @@ packages/teengine/src/
 - [x] JSON atlas loader
 - [x] npm package layout
 - [x] Collision events / sensors
-- [ ] Kinematic character controller
+
+### Engine quality (next)
+
+- [x] Remove demo tags from core entity types (`tags: Set<string>` + demo constants in examples)
+- [x] Seal public API — no demo atlas types, game-named collision presets, or coord internals
+- [ ] ECS query helpers
+- [ ] Small math exports (`Vec2`, utilities)
+- [ ] Asset load cache + GPU release
+- [ ] Physics stepping performance
+
+See [MODULES.md](./MODULES.md) for scope boundaries.

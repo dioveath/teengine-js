@@ -1,6 +1,4 @@
-import { Engine } from "teengine";
-import { PhysicsBridge } from "teengine";
-import { PhysicsWorld } from "teengine";
+import { Engine, PhysicsBridge, PhysicsWorld } from "teengine";
 import { createDemoAtlas } from "./createDemoAtlas.js";
 import { bindDemoLoop, createDemoScene } from "./DemoScene.js";
 
@@ -16,7 +14,7 @@ async function main(): Promise<void> {
     const engine = await Engine.create({ canvas });
     const physicsWorld = await PhysicsWorld.create({ gravityY: 980 });
     const physics = new PhysicsBridge(physicsWorld);
-    const atlas = createDemoAtlas(engine.device);
+    const atlas = createDemoAtlas(engine);
 
     const scene = createDemoScene(engine, physics, atlas);
     bindDemoLoop(scene);
