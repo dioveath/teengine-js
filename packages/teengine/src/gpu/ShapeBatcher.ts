@@ -6,65 +6,82 @@ import type {
 } from "../graphics/DrawQueue.js";
 import { WebGPUContext } from "./WebGPUContext.js";
 import { createShapePipeline, type ShapePipeline } from "./shapeShaders.js";
-import { writeMat3Uniform } from "./uniforms.js";
+import { VertexStore } from "./VertexStore.js";
 
-const MAX_VERTICES = 65_536;
 const FLOATS_PER_VERTEX = 6;
 
-export class ShapeBatcher {
-  private readonly gpu: WebGPUContext;
-  private readonly pipeline: ShapePipeline;
-  private readonly vertexBuffer: GPUBuffer;
-  private vertices: number[] = [];
+type ShapeCommand = ShapeRectCommand | ShapeCircleCommand | ShapeLineCommand;
 
-  private constructor(gpu: WebGPUContext, pipeline: ShapePipeline, vertexBuffer: GPUBuffer) {
-    this.gpu = gpu;
+export type ShapeRun = {
+  kind: "shape";
+  firstVertex: number;
+  count: number;
+};
+
+export class ShapeBatcher {
+  private readonly pipeline: ShapePipeline;
+  private readonly store: VertexStore;
+  private readonly scratch = { x: 0, y: 0 };
+  private viewProjection!: Mat3;
+
+  private constructor(gpu: WebGPUContext, pipeline: ShapePipeline) {
     this.pipeline = pipeline;
-    this.vertexBuffer = vertexBuffer;
+    this.store = new VertexStore(gpu.device);
   }
 
   static create(gpu: WebGPUContext): ShapeBatcher {
-    const pipeline = createShapePipeline(gpu.device, gpu.format);
-    const vertexBuffer = gpu.device.createBuffer({
-      size: MAX_VERTICES * FLOATS_PER_VERTEX * Float32Array.BYTES_PER_ELEMENT,
-      usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-    });
-    return new ShapeBatcher(gpu, pipeline, vertexBuffer);
+    return new ShapeBatcher(gpu, createShapePipeline(gpu.device, gpu.format));
   }
 
-  clear(): void {
-    this.vertices = [];
+  begin(): void {
+    this.store.clear();
   }
 
-  addRect(cmd: ShapeRectCommand): void {
+  pack(commands: ShapeCommand[], viewProjection: Mat3): ShapeRun[] {
+    if (commands.length === 0) return [];
+
+    this.viewProjection = viewProjection;
+    const firstVertex = this.store.vertexCount(FLOATS_PER_VERTEX);
+
+    for (const shape of commands) {
+      if (shape.kind === "shapeRect") this.addRect(shape);
+      else if (shape.kind === "shapeCircle") this.addCircle(shape);
+      else this.addLine(shape);
+    }
+
+    const count = this.store.vertexCount(FLOATS_PER_VERTEX) - firstVertex;
+    return count > 0 ? [{ kind: "shape", firstVertex, count }] : [];
+  }
+
+  upload(): void {
+    this.store.upload();
+  }
+
+  encode(pass: GPURenderPassEncoder, run: ShapeRun): void {
+    pass.setPipeline(this.pipeline.pipeline);
+    pass.setVertexBuffer(0, this.store.gpuBuffer);
+    pass.draw(run.count, 1, run.firstVertex);
+  }
+
+  private addRect(cmd: ShapeRectCommand): void {
     const { x, y, width, height, color } = cmd;
     this.pushQuad(x, y, x + width, y, x + width, y + height, x, y + height, color);
   }
 
-  addCircle(cmd: ShapeCircleCommand): void {
+  private addCircle(cmd: ShapeCircleCommand): void {
     const { x, y, radius, color, segments } = cmd;
     const [r, g, b, a] = Color.toVec4(color);
 
     for (let i = 0; i < segments; i++) {
       const t0 = (i / segments) * Math.PI * 2;
       const t1 = ((i + 1) / segments) * Math.PI * 2;
-      this.vertices.push(x, y, r, g, b, a);
-      this.vertices.push(
-        x + Math.cos(t0) * radius,
-        y + Math.sin(t0) * radius,
-        r, g, b, a,
-      );
-      this.vertices.push(
-        x + Math.cos(t1) * radius,
-        y + Math.sin(t1) * radius,
-        r, g, b, a,
-      );
+      this.vertex(x, y, r, g, b, a);
+      this.vertex(x + Math.cos(t0) * radius, y + Math.sin(t0) * radius, r, g, b, a);
+      this.vertex(x + Math.cos(t1) * radius, y + Math.sin(t1) * radius, r, g, b, a);
     }
-
-    this.checkOverflow();
   }
 
-  addLine(cmd: ShapeLineCommand): void {
+  private addLine(cmd: ShapeLineCommand): void {
     const { x0, y0, x1, y1, width, color } = cmd;
     const dx = x1 - x0;
     const dy = y1 - y0;
@@ -81,19 +98,6 @@ export class ShapeBatcher {
     );
   }
 
-  draw(pass: GPURenderPassEncoder, viewProjection: Mat3): void {
-    if (this.vertices.length === 0) return;
-
-    writeMat3Uniform(this.gpu.device, this.pipeline.uniformBuffer, viewProjection);
-    const data = new Float32Array(this.vertices);
-    this.gpu.device.queue.writeBuffer(this.vertexBuffer, 0, data);
-
-    pass.setPipeline(this.pipeline.pipeline);
-    pass.setBindGroup(0, this.pipeline.bindGroup);
-    pass.setVertexBuffer(0, this.vertexBuffer);
-    pass.draw(data.length / FLOATS_PER_VERTEX);
-  }
-
   private pushQuad(
     x0: number, y0: number,
     x1: number, y1: number,
@@ -102,20 +106,16 @@ export class ShapeBatcher {
     color: Color,
   ): void {
     const [r, g, b, a] = Color.toVec4(color);
-    this.vertices.push(
-      x0, y0, r, g, b, a,
-      x1, y1, r, g, b, a,
-      x2, y2, r, g, b, a,
-      x0, y0, r, g, b, a,
-      x2, y2, r, g, b, a,
-      x3, y3, r, g, b, a,
-    );
-    this.checkOverflow();
+    this.vertex(x0, y0, r, g, b, a);
+    this.vertex(x1, y1, r, g, b, a);
+    this.vertex(x2, y2, r, g, b, a);
+    this.vertex(x0, y0, r, g, b, a);
+    this.vertex(x2, y2, r, g, b, a);
+    this.vertex(x3, y3, r, g, b, a);
   }
 
-  private checkOverflow(): void {
-    if (this.vertices.length / FLOATS_PER_VERTEX > MAX_VERTICES) {
-      throw new Error("Shape vertex buffer overflow.");
-    }
+  private vertex(x: number, y: number, r: number, g: number, b: number, a: number): void {
+    Mat3.transformPoint(this.scratch, this.viewProjection, x, y);
+    this.store.push(this.scratch.x, this.scratch.y, r, g, b, a);
   }
 }

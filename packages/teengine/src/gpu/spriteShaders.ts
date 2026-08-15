@@ -1,11 +1,6 @@
 export const SPRITE_SHADER = /* wgsl */ `
-struct Globals {
-  viewProjection: mat3x3<f32>,
-};
-
-@group(0) @binding(0) var<uniform> globals: Globals;
-@group(1) @binding(0) var spriteTexture: texture_2d<f32>;
-@group(1) @binding(1) var spriteSampler: sampler;
+@group(0) @binding(0) var spriteTexture: texture_2d<f32>;
+@group(0) @binding(1) var spriteSampler: sampler;
 
 struct VertexInput {
   @location(0) position: vec2<f32>,
@@ -22,8 +17,7 @@ struct VertexOutput {
 @vertex
 fn vs_main(input: VertexInput) -> VertexOutput {
   var out: VertexOutput;
-  let projected = globals.viewProjection * vec3(input.position, 1.0);
-  out.position = vec4(projected.xy, 0.0, 1.0);
+  out.position = vec4(input.position, 0.0, 1.0);
   out.uv = input.uv;
   out.color = input.color;
   return out;
@@ -38,24 +32,11 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
 
 export type SpritePipeline = {
   pipeline: GPURenderPipeline;
-  uniformBindGroupLayout: GPUBindGroupLayout;
   textureBindGroupLayout: GPUBindGroupLayout;
-  uniformBuffer: GPUBuffer;
-  uniformBindGroup: GPUBindGroup;
 };
 
 export function createSpritePipeline(device: GPUDevice, format: GPUTextureFormat): SpritePipeline {
   const module = device.createShaderModule({ code: SPRITE_SHADER });
-
-  const uniformBindGroupLayout = device.createBindGroupLayout({
-    entries: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.VERTEX,
-        buffer: { type: "uniform" },
-      },
-    ],
-  });
 
   const textureBindGroupLayout = device.createBindGroupLayout({
     entries: [
@@ -66,7 +47,7 @@ export function createSpritePipeline(device: GPUDevice, format: GPUTextureFormat
 
   const pipeline = device.createRenderPipeline({
     layout: device.createPipelineLayout({
-      bindGroupLayouts: [uniformBindGroupLayout, textureBindGroupLayout],
+      bindGroupLayouts: [textureBindGroupLayout],
     }),
     vertex: {
       module,
@@ -106,23 +87,7 @@ export function createSpritePipeline(device: GPUDevice, format: GPUTextureFormat
     primitive: { topology: "triangle-list" },
   });
 
-  const uniformBuffer = device.createBuffer({
-    size: 48,
-    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-  });
-
-  const uniformBindGroup = device.createBindGroup({
-    layout: uniformBindGroupLayout,
-    entries: [{ binding: 0, resource: { buffer: uniformBuffer } }],
-  });
-
-  return {
-    pipeline,
-    uniformBindGroupLayout,
-    textureBindGroupLayout,
-    uniformBuffer,
-    uniformBindGroup,
-  };
+  return { pipeline, textureBindGroupLayout };
 }
 
 export function createTextureBindGroup(

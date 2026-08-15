@@ -8,8 +8,10 @@ import type {
 } from "../graphics/DrawQueue.js";
 import type { LayerConfig } from "../graphics/LayerRegistry.js";
 import { WebGPUContext } from "./WebGPUContext.js";
-import { ShapeBatcher } from "./ShapeBatcher.js";
-import { SpriteBatcher } from "./SpriteBatcher.js";
+import { ShapeBatcher, type ShapeRun } from "./ShapeBatcher.js";
+import { SpriteBatcher, type SpriteRun } from "./SpriteBatcher.js";
+
+type DrawRun = SpriteRun | ShapeRun;
 
 export class FrameRenderer {
   readonly spriteBatcher: SpriteBatcher;
@@ -49,6 +51,19 @@ export class FrameRenderer {
     grouped: Map<string, DrawCommand[]>,
     getLayer: (name: string) => LayerConfig,
   ): void {
+    this.spriteBatcher.begin();
+    this.shapeBatcher.begin();
+    const draws: DrawRun[] = [];
+
+    for (const layerName of layerOrder) {
+      const commands = grouped.get(layerName);
+      if (!commands || commands.length === 0) continue;
+      this.packLayer(getLayer(layerName), commands, draws);
+    }
+
+    this.spriteBatcher.upload();
+    this.shapeBatcher.upload();
+
     const view = this.gpu.getCurrentTextureView();
     const encoder = this.gpu.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
@@ -67,54 +82,35 @@ export class FrameRenderer {
       ],
     });
 
-    for (const layerName of layerOrder) {
-      const commands = grouped.get(layerName);
-      if (!commands || commands.length === 0) continue;
-      this.flushLayer(pass, getLayer(layerName), commands);
+    for (const draw of draws) {
+      if (draw.kind === "sprite") this.spriteBatcher.encode(pass, draw);
+      else this.shapeBatcher.encode(pass, draw);
     }
 
     pass.end();
     this.gpu.device.queue.submit([encoder.finish()]);
   }
 
-  private flushLayer(
-    pass: GPURenderPassEncoder,
-    layer: LayerConfig,
-    commands: DrawCommand[],
-  ): void {
+  get viewport(): { width: number; height: number } {
+    return { width: this.width, height: this.height };
+  }
+
+  private packLayer(layer: LayerConfig, commands: DrawCommand[], draws: DrawRun[]): void {
     layer.camera.getViewProjection(this.width, this.height, this.viewProjection);
 
     const sprites: SpriteDrawCommand[] = [];
     const shapes: Array<ShapeRectCommand | ShapeCircleCommand | ShapeLineCommand> = [];
 
     for (const cmd of commands) {
-      if (cmd.kind === "sprite") {
-        sprites.push(cmd);
-      } else {
-        shapes.push(cmd);
-      }
+      if (cmd.kind === "sprite") sprites.push(cmd);
+      else shapes.push(cmd);
     }
 
     this.sortSprites(sprites, layer.sort);
     shapes.sort((a, b) => a.z - b.z);
 
-    this.spriteBatcher.drawSorted(pass, sprites, this.viewProjection);
-
-    this.shapeBatcher.clear();
-    for (const shape of shapes) {
-      if (shape.kind === "shapeRect") {
-        this.shapeBatcher.addRect(shape);
-      } else if (shape.kind === "shapeCircle") {
-        this.shapeBatcher.addCircle(shape);
-      } else if (shape.kind === "shapeLine") {
-        this.shapeBatcher.addLine(shape);
-      }
-    }
-    this.shapeBatcher.draw(pass, this.viewProjection);
-  }
-
-  get viewport(): { width: number; height: number } {
-    return { width: this.width, height: this.height };
+    draws.push(...this.spriteBatcher.pack(sprites, this.viewProjection));
+    draws.push(...this.shapeBatcher.pack(shapes, this.viewProjection));
   }
 
   private sortSprites(sprites: SpriteDrawCommand[], mode: LayerConfig["sort"]): void {
