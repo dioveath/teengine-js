@@ -105,15 +105,16 @@ export function createSpaceInvadersScene(engine: Engine, atlas: SpaceInvadersAtl
 
   const hud = document.getElementById("hud");
 
+  world.addFixedSystem(new CombatSystem(playerId, state, atlas.enemyBullet));
   world.addFixedSystem(new PlayerShipSystem(playerId, state, atlas.bullet));
   world.addFixedSystem(new InvaderFormationSystem(state, atlas));
-  world.addFixedSystem(new CombatSystem(playerId, state, atlas.enemyBullet));
   world.addRenderSystem(new StarfieldRenderSystem(engine.graphics));
   world.addRenderSystem(new WorldEntityRenderSystem(engine.graphics));
   world.addRenderSystem(
     new HudRenderSystem(state, (score, lives, status) => {
       if (hud) {
-        hud.textContent = `Score: ${score}   Lives: ${lives}   ${status}   — Arrow keys move, Space fires`;
+        const hint = status === "Playing" ? "Arrows move, hold Space to fire" : "Space restarts";
+        hud.textContent = `Score: ${score}   Lives: ${lives}   ${status}   — ${hint}`;
         hud.dataset.score = String(score);
         hud.dataset.lives = String(lives);
         hud.dataset.status = status;
@@ -130,11 +131,32 @@ export function createSpaceInvadersScene(engine: Engine, atlas: SpaceInvadersAtl
   return { engine, world, atlas, state, playerId, worldCamera: worldCam, uiCamera: uiCam };
 }
 
+export function resetSpaceInvaders(scene: SpaceInvadersSceneContext): void {
+  const { world, atlas, state, playerId } = scene;
+  for (const id of state.invaderIds) world.remove(id);
+  for (const id of state.hudHeartIds) world.remove(id);
+  for (const id of state.enemyBulletIds) world.remove(id);
+  if (state.playerBulletId !== null) world.remove(state.playerBulletId);
+
+  Object.assign(state, createSpaceInvadersState());
+  spawnInvaders(world, atlas, state);
+  spawnHudHearts(world, atlas, state);
+
+  const player = world.get(playerId);
+  if (player) {
+    player.transform.x = WORLD_W * 0.5;
+    player.transform.y = PLAYER_Y;
+  }
+}
+
 export function bindSpaceInvadersLoop(scene: SpaceInvadersSceneContext): void {
   const { engine, world, worldCamera, uiCamera } = scene;
 
   engine.setLoop({
     fixedUpdate: (ctx) => {
+      if ((scene.state.gameOver || scene.state.won) && ctx.input.actionPressed("fire")) {
+        resetSpaceInvaders(scene);
+      }
       world.fixedUpdate({ ...ctx, physics: null });
     },
     render: ({ graphics, input, width, height, alpha, dt, time, tick }) => {

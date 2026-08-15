@@ -62,6 +62,10 @@ export function runFixedTimestep(
       tick += 1;
       steps += 1;
     }
+
+    if (steps >= config.maxFrameSteps) {
+      fixedAccumulator = Math.min(fixedAccumulator, config.fixedDt);
+    }
   }
 
   const alpha = fixedAccumulator / config.fixedDt;

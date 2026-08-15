@@ -71,9 +71,11 @@ export class Input {
 
     canvas.addEventListener("keydown", this.onKeyDown);
     canvas.addEventListener("keyup", this.onKeyUp);
-    canvas.addEventListener("blur", this.onBlur);
     canvas.addEventListener("mousemove", this.onMouseMove);
     canvas.addEventListener("mouseleave", this.onMouseLeave);
+    window.addEventListener("keydown", this.onKeyDown);
+    window.addEventListener("keyup", this.onKeyUp);
+    window.addEventListener("blur", this.onBlur);
   }
 
   /** Call once at the start of each visual frame (before the fixed-update loop). */
@@ -144,9 +146,11 @@ export class Input {
   destroy(): void {
     this.canvas.removeEventListener("keydown", this.onKeyDown);
     this.canvas.removeEventListener("keyup", this.onKeyUp);
-    this.canvas.removeEventListener("blur", this.onBlur);
     this.canvas.removeEventListener("mousemove", this.onMouseMove);
     this.canvas.removeEventListener("mouseleave", this.onMouseLeave);
+    window.removeEventListener("keydown", this.onKeyDown);
+    window.removeEventListener("keyup", this.onKeyUp);
+    window.removeEventListener("blur", this.onBlur);
   }
 
   private updateMousePosition(event: MouseEvent): void {

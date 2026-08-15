@@ -1,4 +1,4 @@
-import type { FixedSystem } from "teengine";
+import type { FixedSystem, FixedSystemContext, World } from "teengine";
 import type { SpaceInvadersAtlas } from "./createSpaceInvadersAtlas.js";
 import {
   FORMATION_MARGIN,
@@ -21,7 +21,7 @@ export class InvaderFormationSystem implements FixedSystem {
     private readonly atlas: SpaceInvadersAtlas,
   ) {}
 
-  fixedUpdate(ctx: import("teengine").FixedSystemContext): void {
+  fixedUpdate(ctx: FixedSystemContext): void {
     const { world, dt } = ctx;
     if (this.state.gameOver || this.state.won || this.state.invaderIds.length === 0) return;
 
@@ -65,7 +65,7 @@ export class InvaderFormationSystem implements FixedSystem {
     }
   }
 
-  private updateInvaderSprites(world: import("teengine").FixedSystemContext["world"]): void {
+  private updateInvaderSprites(world: World): void {
     for (const id of this.state.invaderIds) {
       const invader = world.get(id);
       if (!invader?.sprite) continue;

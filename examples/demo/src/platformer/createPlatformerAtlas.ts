@@ -40,9 +40,9 @@ export function createPlatformerAtlas(device: GPUDevice): PlatformerAtlas {
 
   const texture = createTextureFromRgba(device, pixels, SIZE, CELL * ROWS);
   return {
-    player: regionFromCell(texture, 0, 0, COLS, ROWS),
-    enemy: regionFromCell(texture, 1, 0, COLS, ROWS),
-    coin: regionFromCell(texture, 2, 0, COLS, ROWS),
-    uiHeart: regionFromCell(texture, 3, 0, COLS, ROWS),
+    player: regionFromCell(texture, 0, 0),
+    enemy: regionFromCell(texture, 1, 0),
+    coin: regionFromCell(texture, 2, 0),
+    uiHeart: regionFromCell(texture, 3, 0),
   };
 }

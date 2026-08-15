@@ -1,5 +1,5 @@
 import type { AtlasRegion } from "teengine";
-import { CELL, createTextureFromRgba, fillRect, regionFromCell } from "../shared/atlasUtils.js";
+import { CELL, createTextureFromRgba, regionAt, setPixel } from "../shared/atlasUtils.js";
 
 export type SpaceInvadersAtlas = {
   player: AtlasRegion;
@@ -14,92 +14,161 @@ export type SpaceInvadersAtlas = {
 
 const COLS = 4;
 const ROWS = 2;
-const SIZE = CELL * COLS;
+const ATLAS_W = CELL * COLS;
 
-function drawPlayerShip(pixels: Uint8ClampedArray, col: number, row: number): void {
-  const ox = col * CELL + 8;
-  const oy = row * CELL + 8;
-  fillRect(pixels, SIZE, ox + 6, oy + 14, 4, 6, 0x3f, 0xbf, 0x7f);
-  fillRect(pixels, SIZE, ox + 4, oy + 12, 8, 2, 0x3f, 0xbf, 0x7f);
-  fillRect(pixels, SIZE, ox + 2, oy + 10, 12, 2, 0x3f, 0xbf, 0x7f);
-  fillRect(pixels, SIZE, ox + 0, oy + 8, 16, 2, 0x3f, 0xbf, 0x7f);
+const CANNON = [
+  "......##......",
+  "......##......",
+  ".....####.....",
+  "....######....",
+  "...##.##.##...",
+  "..##########..",
+  ".############.",
+  "##############",
+  "##..######..##",
+  "#....####....#",
+];
+
+const SQUID = [
+  "..#.....#..",
+  "...#...#...",
+  "..#######..",
+  ".##.###.##.",
+  "###########",
+  "#.#######.#",
+  "#.#.....#.#",
+  "...##.##...",
+];
+
+const SQUID_ALT = [
+  "..#.....#..",
+  "#..#...#..#",
+  "#.#######.#",
+  "###.###.###",
+  "###########",
+  ".#.#######.",
+  "..#.....#..",
+  ".#.......#.",
+];
+
+const CRAB = [
+  ".#.....#.",
+  "..#...#..",
+  ".#######.",
+  "##.###.##",
+  "#########",
+  "#.#####.#",
+  "#.#...#.#",
+  "..#...#..",
+];
+
+const CRAB_ALT = [
+  ".#.....#.",
+  "#.#...#.#",
+  "#.#####.#",
+  "##.###.##",
+  "#########",
+  ".#.#####.",
+  "#.#...#.#",
+  "#.......#",
+];
+
+const HEART = [
+  ".##.##.",
+  "#######",
+  "#######",
+  ".#####.",
+  "..###..",
+  "...#...",
+];
+
+function patternWidth(rows: readonly string[]): number {
+  let w = 0;
+  for (const row of rows) w = Math.max(w, row.length);
+  return w;
 }
 
-function drawInvaderA(pixels: Uint8ClampedArray, col: number, row: number, alt: boolean): void {
-  const ox = col * CELL + 6;
-  const oy = row * CELL + 8;
-  fillRect(pixels, SIZE, ox + 4, oy + 0, 12, 2, 0xf7, 0x81, 0x66);
-  fillRect(pixels, SIZE, ox + 2, oy + 2, 16, 2, 0xf7, 0x81, 0x66);
-  fillRect(pixels, SIZE, ox + 0, oy + 4, 20, 4, 0xf7, 0x81, 0x66);
-  fillRect(pixels, SIZE, ox + 2, oy + 8, 16, 2, 0xf7, 0x81, 0x66);
-  if (alt) {
-    fillRect(pixels, SIZE, ox + 0, oy + 10, 4, 4, 0xf7, 0x81, 0x66);
-    fillRect(pixels, SIZE, ox + 16, oy + 10, 4, 4, 0xf7, 0x81, 0x66);
-  } else {
-    fillRect(pixels, SIZE, ox + 4, oy + 10, 4, 4, 0xf7, 0x81, 0x66);
-    fillRect(pixels, SIZE, ox + 12, oy + 10, 4, 4, 0xf7, 0x81, 0x66);
+function blit(
+  pixels: Uint8ClampedArray,
+  ox: number,
+  oy: number,
+  rows: readonly string[],
+  rgb: readonly [number, number, number],
+  scale = 1,
+): { x: number; y: number; w: number; h: number } {
+  for (let y = 0; y < rows.length; y++) {
+    const line = rows[y];
+    if (line === undefined) continue;
+    for (let x = 0; x < line.length; x++) {
+      if (line[x] !== "#") continue;
+      for (let sy = 0; sy < scale; sy++) {
+        for (let sx = 0; sx < scale; sx++) {
+          setPixel(pixels, ATLAS_W, ox + x * scale + sx, oy + y * scale + sy, rgb[0], rgb[1], rgb[2]);
+        }
+      }
+    }
   }
+  return { x: ox, y: oy, w: patternWidth(rows) * scale, h: rows.length * scale };
 }
 
-function drawInvaderB(pixels: Uint8ClampedArray, col: number, row: number, alt: boolean): void {
-  const ox = col * CELL + 4;
-  const oy = row * CELL + 6;
-  fillRect(pixels, SIZE, ox + 6, oy + 0, 8, 2, 0xa3, 0x71, 0xf7);
-  fillRect(pixels, SIZE, ox + 2, oy + 2, 16, 2, 0xa3, 0x71, 0xf7);
-  fillRect(pixels, SIZE, ox + 0, oy + 4, 20, 6, 0xa3, 0x71, 0xf7);
-  fillRect(pixels, SIZE, ox + 4, oy + 10, 12, 2, 0xa3, 0x71, 0xf7);
-  if (alt) {
-    fillRect(pixels, SIZE, ox + 0, oy + 12, 6, 4, 0xa3, 0x71, 0xf7);
-    fillRect(pixels, SIZE, ox + 14, oy + 12, 6, 4, 0xa3, 0x71, 0xf7);
-  } else {
-    fillRect(pixels, SIZE, ox + 2, oy + 12, 6, 4, 0xa3, 0x71, 0xf7);
-    fillRect(pixels, SIZE, ox + 12, oy + 12, 6, 4, 0xa3, 0x71, 0xf7);
-  }
-}
-
-function drawBullet(pixels: Uint8ClampedArray, col: number, row: number, enemy: boolean): void {
-  const ox = col * CELL + 14;
-  const oy = row * CELL + (enemy ? 4 : 10);
-  if (enemy) {
-    fillRect(pixels, SIZE, ox, oy, 4, 10, 0xff, 0x4d, 0x6d);
-  } else {
-    fillRect(pixels, SIZE, ox, oy, 4, 6, 0xff, 0xd7, 0x00);
-  }
-}
-
-function drawHeart(pixels: Uint8ClampedArray, col: number, row: number): void {
-  const ox = col * CELL + 8;
-  const oy = row * CELL + 10;
-  fillRect(pixels, SIZE, ox + 2, oy + 0, 4, 2, 0xff, 0x4d, 0x6d);
-  fillRect(pixels, SIZE, ox + 10, oy + 0, 4, 2, 0xff, 0x4d, 0x6d);
-  fillRect(pixels, SIZE, ox + 0, oy + 2, 16, 4, 0xff, 0x4d, 0x6d);
-  fillRect(pixels, SIZE, ox + 2, oy + 6, 12, 2, 0xff, 0x4d, 0x6d);
-  fillRect(pixels, SIZE, ox + 4, oy + 8, 8, 2, 0xff, 0x4d, 0x6d);
-  fillRect(pixels, SIZE, ox + 6, oy + 10, 4, 2, 0xff, 0x4d, 0x6d);
-}
-
-/** Procedural Space Invaders atlas — no external image files required. */
-export function createSpaceInvadersAtlas(device: GPUDevice): SpaceInvadersAtlas {
-  const pixels = new Uint8ClampedArray(SIZE * CELL * ROWS * 4);
-
-  drawPlayerShip(pixels, 0, 0);
-  drawInvaderA(pixels, 1, 0, false);
-  drawInvaderA(pixels, 2, 0, true);
-  drawInvaderB(pixels, 3, 0, false);
-  drawInvaderB(pixels, 0, 1, true);
-  drawBullet(pixels, 1, 1, false);
-  drawBullet(pixels, 2, 1, true);
-  drawHeart(pixels, 3, 1);
-
-  const texture = createTextureFromRgba(device, pixels, SIZE, CELL * ROWS);
+function cellOrigin(col: number, row: number, w: number, h: number): { x: number; y: number } {
   return {
-    player: regionFromCell(texture, 0, 0, COLS, ROWS),
-    invaderA: regionFromCell(texture, 1, 0, COLS, ROWS),
-    invaderAAlt: regionFromCell(texture, 2, 0, COLS, ROWS),
-    invaderB: regionFromCell(texture, 3, 0, COLS, ROWS),
-    invaderBAlt: regionFromCell(texture, 0, 1, COLS, ROWS),
-    bullet: regionFromCell(texture, 1, 1, COLS, ROWS),
-    enemyBullet: regionFromCell(texture, 2, 1, COLS, ROWS),
-    uiHeart: regionFromCell(texture, 3, 1, COLS, ROWS),
+    x: col * CELL + Math.floor((CELL - w) / 2),
+    y: row * CELL + Math.floor((CELL - h) / 2),
+  };
+}
+
+export function createSpaceInvadersAtlas(device: GPUDevice): SpaceInvadersAtlas {
+  const pixels = new Uint8ClampedArray(ATLAS_W * CELL * ROWS * 4);
+  const cyan: [number, number, number] = [0xb8, 0xff, 0xf0];
+  const orange: [number, number, number] = [0xf7, 0x81, 0x66];
+  const violet: [number, number, number] = [0xa3, 0x71, 0xf7];
+  const gold: [number, number, number] = [0xff, 0xe0, 0x66];
+  const rose: [number, number, number] = [0xff, 0x4d, 0x6d];
+
+  const scale = 2;
+  const shipBox = cellOrigin(0, 0, patternWidth(CANNON) * scale, CANNON.length * scale);
+  const squidBox = cellOrigin(1, 0, patternWidth(SQUID) * scale, SQUID.length * scale);
+  const squidAltBox = cellOrigin(2, 0, patternWidth(SQUID_ALT) * scale, SQUID_ALT.length * scale);
+  const crabBox = cellOrigin(3, 0, patternWidth(CRAB) * scale, CRAB.length * scale);
+  const crabAltBox = cellOrigin(0, 1, patternWidth(CRAB_ALT) * scale, CRAB_ALT.length * scale);
+  const heartBox = cellOrigin(3, 1, patternWidth(HEART) * scale, HEART.length * scale);
+
+  const ship = blit(pixels, shipBox.x, shipBox.y, CANNON, cyan, scale);
+  const squid = blit(pixels, squidBox.x, squidBox.y, SQUID, orange, scale);
+  const squidAlt = blit(pixels, squidAltBox.x, squidAltBox.y, SQUID_ALT, orange, scale);
+  const crab = blit(pixels, crabBox.x, crabBox.y, CRAB, violet, scale);
+  const crabAlt = blit(pixels, crabAltBox.x, crabAltBox.y, CRAB_ALT, violet, scale);
+  const heart = blit(pixels, heartBox.x, heartBox.y, HEART, rose, scale);
+
+  const bullet = { x: 1 * CELL + 14, y: 1 * CELL + 8, w: 4, h: 12 };
+  for (let y = 0; y < bullet.h; y++) {
+    const w = y < 3 ? 4 : 2;
+    const x0 = bullet.x + Math.floor((bullet.w - w) / 2);
+    for (let x = 0; x < w; x++) {
+      setPixel(pixels, ATLAS_W, x0 + x, bullet.y + y, gold[0], gold[1], gold[2]);
+    }
+  }
+
+  const enemyBolt = { x: 2 * CELL + 14, y: 1 * CELL + 8, w: 4, h: 12 };
+  for (let y = 0; y < enemyBolt.h; y++) {
+    const zigzag = (Math.floor(y / 2) % 2) * 2;
+    setPixel(pixels, ATLAS_W, enemyBolt.x + zigzag, enemyBolt.y + y, rose[0], rose[1], rose[2]);
+    setPixel(pixels, ATLAS_W, enemyBolt.x + zigzag + 1, enemyBolt.y + y, rose[0], rose[1], rose[2]);
+  }
+
+  const texture = createTextureFromRgba(device, pixels, ATLAS_W, CELL * ROWS);
+  const pack = (box: { x: number; y: number; w: number; h: number }) =>
+    regionAt(texture, box.x, box.y, box.w, box.h);
+
+  return {
+    player: pack(ship),
+    invaderA: pack(squid),
+    invaderAAlt: pack(squidAlt),
+    invaderB: pack(crab),
+    invaderBAlt: pack(crabAlt),
+    bullet: pack(bullet),
+    enemyBullet: pack(enemyBolt),
+    uiHeart: pack(heart),
   };
 }

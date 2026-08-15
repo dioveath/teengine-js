@@ -1,12 +1,6 @@
-import type { AtlasRegion, EntityId, FixedSystem } from "teengine";
+import type { AtlasRegion, EntityId, FixedSystem, FixedSystemContext } from "teengine";
 import { Layers } from "teengine";
-import {
-  PLAYER_H,
-  PLAYER_SPEED,
-  PLAYER_W,
-  WORLD_W,
-  type SpaceInvadersState,
-} from "./spaceInvadersState.js";
+import { PLAYER_H, PLAYER_SPEED, PLAYER_W, WORLD_W, type SpaceInvadersState } from "./spaceInvadersState.js";
 
 export class PlayerShipSystem implements FixedSystem {
   readonly name = "PlayerShipSystem";
@@ -17,7 +11,7 @@ export class PlayerShipSystem implements FixedSystem {
     private readonly bulletRegion: AtlasRegion,
   ) {}
 
-  fixedUpdate(ctx: import("teengine").FixedSystemContext): void {
+  fixedUpdate(ctx: FixedSystemContext): void {
     const { world, input, dt } = ctx;
     if (this.state.gameOver || this.state.won) return;
 
@@ -25,18 +19,20 @@ export class PlayerShipSystem implements FixedSystem {
     if (!player) return;
 
     const dx = input.actionAxis("move_left", "move_right");
-    const halfW = PLAYER_W * 0.5;
+    const halfW = (player.sprite?.region.width ?? PLAYER_W) * 0.5;
     player.transform.x = Math.max(halfW, Math.min(WORLD_W - halfW, player.transform.x + dx * PLAYER_SPEED * dt));
 
-    this.state.fireCooldown = Math.max(0, this.state.fireCooldown - dt);
-    if (input.actionPressed("fire") && this.state.fireCooldown <= 0 && this.state.playerBulletId === null) {
-      const bulletId = world.spawn({
-        name: "PlayerBullet",
-        transform: { x: player.transform.x, y: player.transform.y - PLAYER_H * 0.5 - 6 },
-        sprite: { region: this.bulletRegion, layer: Layers.world },
-      });
-      this.state.playerBulletId = bulletId;
-      this.state.fireCooldown = 0.35;
-    }
+    if (!input.actionDown("fire") || this.state.playerBulletId !== null) return;
+
+    const playerH = player.sprite?.region.height ?? PLAYER_H;
+    const bulletId = world.spawn({
+      name: "PlayerBullet",
+      transform: {
+        x: player.transform.x,
+        y: player.transform.y - playerH * 0.5 - this.bulletRegion.height * 0.5,
+      },
+      sprite: { region: this.bulletRegion, layer: Layers.world },
+    });
+    this.state.playerBulletId = bulletId;
   }
 }

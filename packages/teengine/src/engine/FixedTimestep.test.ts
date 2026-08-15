@@ -42,6 +42,21 @@ describe("FixedTimestep", () => {
 
     expect(steps).toBe(MAX_STEPS);
     expect(state.fixedAccumulator).toBeGreaterThan(0);
+    expect(state.fixedAccumulator).toBeLessThanOrEqual(FIXED_DT);
+  });
+
+  it("keeps render alpha in range after a long hitch", () => {
+    const result = runFixedTimestep(
+      createFixedTimestepState(),
+      0.25,
+      { fixedDt: FIXED_DT, maxFrameSteps: MAX_STEPS },
+      false,
+      () => {},
+    );
+
+    expect(result.steps).toBe(MAX_STEPS);
+    expect(result.alpha).toBeGreaterThanOrEqual(0);
+    expect(result.alpha).toBeLessThanOrEqual(1);
   });
 
   it("exposes render alpha between zero and one after a partial step", () => {

@@ -58,7 +58,15 @@ describe("Input", () => {
     expect(input.keyDown("ArrowLeft")).toBe(false);
   });
 
-  it("clears held keys when the canvas loses focus", () => {
+  it("reads keys from the window without canvas focus", () => {
+    ({ input, canvas } = createCanvasInput());
+
+    window.dispatchEvent(new KeyboardEvent("keydown", { code: "Space", bubbles: true }));
+    input.beginFrame();
+    expect(input.keyDown("Space")).toBe(true);
+  });
+
+  it("clears held keys when the window loses focus", () => {
     ({ input, canvas } = createCanvasInput());
     input.focus();
 
@@ -66,7 +74,7 @@ describe("Input", () => {
     input.beginFrame();
     expect(input.keyDown("KeyW")).toBe(true);
 
-    canvas.dispatchEvent(new Event("blur"));
+    window.dispatchEvent(new Event("blur"));
     input.beginFrame();
     expect(input.keyDown("KeyW")).toBe(false);
   });

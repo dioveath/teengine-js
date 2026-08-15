@@ -25,26 +25,26 @@ export function createTextureFromRgba(
   return { texture, view, sampler, width, height };
 }
 
-export function regionFromCell(
+export function regionAt(
   texture: GpuTexture,
-  col: number,
-  row: number,
-  cols: number,
-  rows: number,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
 ): AtlasRegion {
-  const atlasW = CELL * cols;
-  const atlasH = CELL * rows;
-  const x = col * CELL;
-  const y = row * CELL;
   return {
     texture,
-    u0: x / atlasW,
-    v0: y / atlasH,
-    u1: (x + CELL) / atlasW,
-    v1: (y + CELL) / atlasH,
-    width: CELL,
-    height: CELL,
+    u0: x / texture.width,
+    v0: y / texture.height,
+    u1: (x + w) / texture.width,
+    v1: (y + h) / texture.height,
+    width: w,
+    height: h,
   };
+}
+
+export function regionFromCell(texture: GpuTexture, col: number, row: number): AtlasRegion {
+  return regionAt(texture, col * CELL, row * CELL, CELL, CELL);
 }
 
 export function setPixel(
@@ -59,6 +59,7 @@ export function setPixel(
 ): void {
   if (x < 0 || y < 0 || x >= atlasW) return;
   const i = (y * atlasW + x) * 4;
+  if (i + 3 >= pixels.length) return;
   pixels[i] = r;
   pixels[i + 1] = g;
   pixels[i + 2] = b;

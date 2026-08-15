@@ -3,7 +3,13 @@ import { expect, test, type Page } from "@playwright/test";
 declare global {
   interface Window {
     __TE_SI__?: {
-      state: { score: number; lives: number; gameOver: boolean; won: boolean };
+      state: {
+        score: number;
+        lives: number;
+        gameOver: boolean;
+        won: boolean;
+        playerBulletId: number | null;
+      };
       playerX: () => number;
     };
   }
@@ -57,24 +63,27 @@ test.describe("Space Invaders", () => {
     expect(after).toBeLessThan(before);
   });
 
-  test("firing increases score", async ({ page }) => {
+  test("holding Space fires and scores", async ({ page }) => {
     await gotoPlayingOrSkip(page);
-    await page.locator("#canvas").click();
 
-    await page.keyboard.down("ArrowLeft");
-    await page.waitForTimeout(130);
-    await page.keyboard.up("ArrowLeft");
+    await page.keyboard.down("Space");
+    await expect
+      .poll(async () => page.evaluate(() => window.__TE_SI__!.state.score), { timeout: 12_000 })
+      .toBeGreaterThan(0);
+    await page.keyboard.up("Space");
+  });
 
-    const deadline = Date.now() + 15_000;
-    while (Date.now() < deadline) {
-      await page.keyboard.down("Space");
-      await page.waitForTimeout(80);
-      await page.keyboard.up("Space");
-      const score = await page.evaluate(() => window.__TE_SI__!.state.score);
-      if (score > 0) break;
-      await page.waitForTimeout(1000);
-    }
+  test("Space restarts after game over", async ({ page }) => {
+    await gotoPlayingOrSkip(page);
 
-    expect(await page.evaluate(() => window.__TE_SI__!.state.score)).toBeGreaterThan(0);
+    await page.evaluate(() => {
+      window.__TE_SI__!.state.gameOver = true;
+    });
+    await expect(page.locator("#hud")).toHaveAttribute("data-status", "Game over");
+
+    await page.keyboard.press("Space");
+    await expect(page.locator("#hud")).toHaveAttribute("data-status", "Playing");
+    await expect(page.locator("#hud")).toHaveAttribute("data-lives", "3");
+    await expect(page.locator("#hud")).toHaveAttribute("data-score", "0");
   });
 });

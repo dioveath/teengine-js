@@ -8,23 +8,23 @@ export const WORLD_H = 600;
 export const MAX_VIEW_W = 1280;
 export const MAX_VIEW_H = 960;
 
-export const PLAYER_Y = 540;
-export const PLAYER_SPEED = 320;
-export const PLAYER_W = 32;
-export const PLAYER_H = 24;
+export const PLAYER_Y = 548;
+export const PLAYER_SPEED = 360;
+export const PLAYER_W = 28;
+export const PLAYER_H = 20;
 
 export const INVADER_ROWS = 5;
 export const INVADER_COLS = 11;
-export const INVADER_W = 32;
-export const INVADER_H = 24;
+export const INVADER_W = 22;
+export const INVADER_H = 16;
 export const INVADER_PAD_X = 48;
 export const INVADER_PAD_Y = 40;
-export const INVADER_START_X = 120;
+export const INVADER_START_X = 136;
 export const INVADER_START_Y = 80;
 
 export const BULLET_W = 4;
-export const BULLET_H = 8;
-export const PLAYER_BULLET_SPEED = 480;
+export const BULLET_H = 12;
+export const PLAYER_BULLET_SPEED = 520;
 export const ENEMY_BULLET_SPEED = 280;
 
 export const BASE_FORMATION_SPEED = 28;
@@ -39,7 +39,6 @@ export type SpaceInvadersState = {
   gameOver: boolean;
   won: boolean;
   formationDir: 1 | -1;
-  fireCooldown: number;
   enemyFireCooldown: number;
   invaderAnimFrame: 0 | 1;
   invaderAnimTimer: number;
@@ -57,7 +56,6 @@ export function createSpaceInvadersState(): SpaceInvadersState {
     gameOver: false,
     won: false,
     formationDir: 1,
-    fireCooldown: 0,
     enemyFireCooldown: 1.2,
     invaderAnimFrame: 0,
     invaderAnimTimer: 0,
@@ -101,12 +99,8 @@ export function boxesOverlap(
   return aLeft < bRight && aRight > bLeft && aTop < bBottom && aBottom > bTop;
 }
 
-export function countAliveInvaders(state: SpaceInvadersState): number {
-  return state.invaderIds.length;
-}
-
 export function formationSpeed(state: SpaceInvadersState): number {
-  const alive = Math.max(countAliveInvaders(state), 1);
+  const alive = Math.max(state.invaderIds.length, 1);
   const speedup = (INVADER_ROWS * INVADER_COLS - alive) * 1.8;
   return BASE_FORMATION_SPEED + speedup;
 }

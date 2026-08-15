@@ -1,4 +1,4 @@
-import type { AtlasRegion, EntityId, FixedSystem } from "teengine";
+import type { AtlasRegion, EntityId, FixedSystem, FixedSystemContext, World } from "teengine";
 import { Layers } from "teengine";
 import {
   BULLET_H,
@@ -28,7 +28,7 @@ export class CombatSystem implements FixedSystem {
     private readonly enemyBulletRegion: AtlasRegion,
   ) {}
 
-  fixedUpdate(ctx: import("teengine").FixedSystemContext): void {
+  fixedUpdate(ctx: FixedSystemContext): void {
     const { world, dt } = ctx;
     if (this.state.gameOver || this.state.won) return;
 
@@ -39,7 +39,7 @@ export class CombatSystem implements FixedSystem {
     this.checkWin();
   }
 
-  private movePlayerBullet(world: import("teengine").FixedSystemContext["world"], dt: number): void {
+  private movePlayerBullet(world: World, dt: number): void {
     if (this.state.playerBulletId === null) return;
     const bullet = world.get(this.state.playerBulletId);
     if (!bullet) {
@@ -54,7 +54,7 @@ export class CombatSystem implements FixedSystem {
     }
   }
 
-  private moveEnemyBullets(world: import("teengine").FixedSystemContext["world"], dt: number): void {
+  private moveEnemyBullets(world: World, dt: number): void {
     for (const id of [...this.state.enemyBulletIds]) {
       const bullet = world.get(id);
       if (!bullet) {
@@ -69,7 +69,7 @@ export class CombatSystem implements FixedSystem {
     }
   }
 
-  private fireEnemyBullet(world: import("teengine").FixedSystemContext["world"], dt: number): void {
+  private fireEnemyBullet(world: World, dt: number): void {
     if (this.state.invaderIds.length === 0) return;
 
     this.state.enemyFireCooldown -= dt;
@@ -98,14 +98,14 @@ export class CombatSystem implements FixedSystem {
 
     const bulletId = world.spawn({
       name: "EnemyBullet",
-      transform: { x: shooter.transform.x, y: shooter.transform.y + INVADER_H * 0.5 + 4 },
+      transform: { x: shooter.transform.x, y: shooter.transform.y + INVADER_H * 0.5 + BULLET_H * 0.5 },
       sprite: { region: this.enemyBulletRegion, layer: Layers.world },
     });
     this.state.enemyBulletIds.add(bulletId);
     this.state.enemyFireCooldown = 0.8 + Math.random() * 1.2;
   }
 
-  private checkCollisions(world: import("teengine").FixedSystemContext["world"]): void {
+  private checkCollisions(world: World): void {
     const player = world.get(this.playerId);
     if (!player) return;
 
@@ -119,12 +119,12 @@ export class CombatSystem implements FixedSystem {
             boxesOverlap(
               bullet.transform.x,
               bullet.transform.y,
-              BULLET_W,
-              BULLET_H,
+              bullet.sprite?.region.width ?? BULLET_W,
+              bullet.sprite?.region.height ?? BULLET_H,
               invader.transform.x,
               invader.transform.y,
-              INVADER_W,
-              INVADER_H,
+              invader.sprite?.region.width ?? INVADER_W,
+              invader.sprite?.region.height ?? INVADER_H,
             )
           ) {
             const kind = this.state.invaderKinds.get(invaderId) ?? "B";
@@ -147,12 +147,12 @@ export class CombatSystem implements FixedSystem {
         boxesOverlap(
           bullet.transform.x,
           bullet.transform.y,
-          BULLET_W,
-          BULLET_H,
+          bullet.sprite?.region.width ?? BULLET_W,
+          bullet.sprite?.region.height ?? BULLET_H,
           player.transform.x,
           player.transform.y,
-          PLAYER_W,
-          PLAYER_H,
+          player.sprite?.region.width ?? PLAYER_W,
+          player.sprite?.region.height ?? PLAYER_H,
         )
       ) {
         world.remove(bulletId);
@@ -169,12 +169,12 @@ export class CombatSystem implements FixedSystem {
         boxesOverlap(
           invader.transform.x,
           invader.transform.y,
-          INVADER_W,
-          INVADER_H,
+          invader.sprite?.region.width ?? INVADER_W,
+          invader.sprite?.region.height ?? INVADER_H,
           player.transform.x,
           player.transform.y,
-          PLAYER_W,
-          PLAYER_H,
+          player.sprite?.region.width ?? PLAYER_W,
+          player.sprite?.region.height ?? PLAYER_H,
         )
       ) {
         this.state.gameOver = true;
@@ -183,7 +183,7 @@ export class CombatSystem implements FixedSystem {
     }
   }
 
-  private killPlayer(world: import("teengine").FixedSystemContext["world"]): void {
+  private killPlayer(world: World): void {
     this.state.lives -= 1;
     for (const bulletId of [...this.state.enemyBulletIds]) {
       world.remove(bulletId);

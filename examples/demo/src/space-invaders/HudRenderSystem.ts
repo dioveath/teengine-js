@@ -12,7 +12,7 @@ export class HudRenderSystem implements RenderSystem {
   render(_ctx: import("teengine").RenderSystemContext): void {
     let status = "Playing";
     if (this.state.won) status = "You win!";
-    if (this.state.gameOver && !this.state.won) status = "Game over";
+    else if (this.state.gameOver) status = "Game over";
     this.onHudUpdate(this.state.score, this.state.lives, status);
   }
 }
