@@ -30,6 +30,19 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
 }
 `;
 
+export const STRAIGHT_ALPHA_BLEND: GPUBlendState = {
+  color: {
+    srcFactor: "src-alpha",
+    dstFactor: "one-minus-src-alpha",
+    operation: "add",
+  },
+  alpha: {
+    srcFactor: "one",
+    dstFactor: "one-minus-src-alpha",
+    operation: "add",
+  },
+};
+
 export type SpritePipeline = {
   pipeline: GPURenderPipeline;
   textureBindGroupLayout: GPUBindGroupLayout;
@@ -66,23 +79,7 @@ export function createSpritePipeline(device: GPUDevice, format: GPUTextureFormat
     fragment: {
       module,
       entryPoint: "fs_main",
-      targets: [
-        {
-          format,
-          blend: {
-            color: {
-              srcFactor: "src-alpha",
-              dstFactor: "one-minus-src-alpha",
-              operation: "add",
-            },
-            alpha: {
-              srcFactor: "one",
-              dstFactor: "one-minus-src-alpha",
-              operation: "add",
-            },
-          },
-        },
-      ],
+      targets: [{ format, blend: STRAIGHT_ALPHA_BLEND }],
     },
     primitive: { topology: "triangle-list" },
   });

@@ -20,6 +20,9 @@ export class Input {
   private readonly canvas: HTMLCanvasElement;
   private readonly keysDown = new Set<string>();
   private previousKeys = new Set<string>();
+  private keysAtFrameStart = new Set<string>();
+  private framePressed = new Set<string>();
+  private queuedPressed = new Set<string>();
   private readonly consumedPresses = new Set<string>();
   private readonly boundCodes = new Set<string>();
 
@@ -33,6 +36,9 @@ export class Input {
     if (this.shouldPreventDefault(event.code)) {
       event.preventDefault();
     }
+    if (!this.keysDown.has(event.code)) {
+      this.queuedPressed.add(event.code);
+    }
     this.keysDown.add(event.code);
   };
 
@@ -45,6 +51,7 @@ export class Input {
 
   private readonly onBlur = (): void => {
     this.keysDown.clear();
+    this.queuedPressed.clear();
     this.mouseInCanvas = false;
   };
 
@@ -71,7 +78,10 @@ export class Input {
 
   /** Call once at the start of each visual frame (before the fixed-update loop). */
   beginFrame(): void {
-    this.previousKeys = new Set(this.keysDown);
+    this.previousKeys = this.keysAtFrameStart;
+    this.keysAtFrameStart = new Set(this.keysDown);
+    this.framePressed = this.queuedPressed;
+    this.queuedPressed = new Set();
     this.consumedPresses.clear();
   }
 
@@ -87,8 +97,7 @@ export class Input {
   }
 
   keyPressed(code: string): boolean {
-    if (!this.keysDown.has(code) || this.previousKeys.has(code)) return false;
-    if (this.consumedPresses.has(code)) return false;
+    if (!this.framePressed.has(code) || this.consumedPresses.has(code)) return false;
     this.consumedPresses.add(code);
     return true;
   }
@@ -109,14 +118,12 @@ export class Input {
     return this.actions.getCodes(action).some((code) => this.keyReleased(code));
   }
 
-  /** Returns -1, 0, or 1 from paired negative/positive actions. */
   actionAxis(negativeAction: string, positiveAction: string): number {
     const neg = this.actionDown(negativeAction) ? 1 : 0;
     const pos = this.actionDown(positiveAction) ? 1 : 0;
     return pos - neg;
   }
 
-  /** Mouse position in canvas pixel coordinates (matches viewport). */
   get mouseScreen(): MousePosition {
     return { x: this.mouseX, y: this.mouseY };
   }

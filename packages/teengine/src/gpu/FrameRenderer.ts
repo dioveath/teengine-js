@@ -98,23 +98,31 @@ export class FrameRenderer {
   private packLayer(layer: LayerConfig, commands: DrawCommand[], draws: DrawRun[]): void {
     layer.camera.getViewProjection(this.width, this.height, this.viewProjection);
 
-    const sprites: SpriteDrawCommand[] = [];
-    const shapes: Array<ShapeRectCommand | ShapeCircleCommand | ShapeLineCommand> = [];
-
-    for (const cmd of commands) {
-      if (cmd.kind === "sprite") sprites.push(cmd);
-      else shapes.push(cmd);
+    if (layer.sort !== "none") {
+      commands.sort(
+        (a, b) => (a.kind === "sprite" ? a.opts.z : a.z) - (b.kind === "sprite" ? b.opts.z : b.z),
+      );
     }
 
-    this.sortSprites(sprites, layer.sort);
-    shapes.sort((a, b) => a.z - b.z);
-
-    draws.push(...this.spriteBatcher.pack(sprites, this.viewProjection));
-    draws.push(...this.shapeBatcher.pack(shapes, this.viewProjection));
-  }
-
-  private sortSprites(sprites: SpriteDrawCommand[], mode: LayerConfig["sort"]): void {
-    if (mode === "none") return;
-    sprites.sort((a, b) => a.opts.z - b.opts.z);
+    let i = 0;
+    while (i < commands.length) {
+      const spriteRun = commands[i].kind === "sprite";
+      const start = i;
+      i += 1;
+      while (i < commands.length && (commands[i].kind === "sprite") === spriteRun) {
+        i += 1;
+      }
+      const batch = commands.slice(start, i);
+      if (spriteRun) {
+        draws.push(...this.spriteBatcher.pack(batch as SpriteDrawCommand[], this.viewProjection));
+      } else {
+        draws.push(
+          ...this.shapeBatcher.pack(
+            batch as Array<ShapeRectCommand | ShapeCircleCommand | ShapeLineCommand>,
+            this.viewProjection,
+          ),
+        );
+      }
+    }
   }
 }

@@ -20,6 +20,7 @@ export class Camera2D {
 
   private readonly viewMatrix = Mat3.create();
   private readonly inverseView = Mat3.create();
+  private readonly orthoMatrix = Mat3.create();
 
   lookAt(x: number, y: number): void {
     this.x = x;
@@ -56,9 +57,8 @@ export class Camera2D {
   /** World → clip-space matrix for the given viewport size. */
   getViewProjection(viewportW: number, viewportH: number, out: Mat3 = Mat3.create()): Mat3 {
     const view = this.getViewMatrix(viewportW, viewportH, this.viewMatrix);
-    const proj = Mat3.create();
-    Mat3.ortho(0, viewportW, viewportH, 0, proj);
-    return Mat3.multiply(out, proj, view);
+    Mat3.ortho(0, viewportW, viewportH, 0, this.orthoMatrix);
+    return Mat3.multiply(out, this.orthoMatrix, view);
   }
 
   /** World → screen pixel coordinates. */
@@ -97,12 +97,10 @@ export class Camera2D {
     const cy = viewportH * 0.5;
 
     Mat3.identity(out);
-    Mat3.translate(out, out, -this.x, -this.y);
-    Mat3.scale(out, out, this.zoom, this.zoom);
-    if (this.rotation !== 0) {
-      Mat3.rotate(out, out, this.rotation);
-    }
     Mat3.translate(out, out, cx, cy);
+    if (this.rotation !== 0) Mat3.rotate(out, out, this.rotation);
+    Mat3.scale(out, out, this.zoom, this.zoom);
+    Mat3.translate(out, out, -this.x, -this.y);
     return out;
   }
 }

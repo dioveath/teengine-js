@@ -5,6 +5,8 @@ import {
   BULLET_W,
   ENEMY_BULLET_SPEED,
   INVADER_H,
+  INVADER_PAD_X,
+  INVADER_START_X,
   INVADER_W,
   PLAYER_BULLET_SPEED,
   PLAYER_H,
@@ -80,15 +82,16 @@ export class CombatSystem implements FixedSystem {
 
     const byColumn = new Map<number, typeof shooters>();
     for (const invader of shooters) {
-      const col = Math.round(invader.transform.x);
+      const col = Math.round((invader.transform.x - INVADER_START_X) / INVADER_PAD_X);
       const list = byColumn.get(col) ?? [];
       list.push(invader);
       byColumn.set(col, list);
     }
 
     const columns = [...byColumn.keys()];
-    const pickCol = columns[Math.floor(Math.random() * columns.length)] ?? columns[0];
-    const columnInvaders = byColumn.get(pickCol) ?? [];
+    if (columns.length === 0) return;
+    const pickCol = columns[Math.floor(Math.random() * columns.length)]!;
+    const columnInvaders = byColumn.get(pickCol)!;
     const shooter = columnInvaders.reduce((best, cur) =>
       cur.transform.y > best.transform.y ? cur : best,
     );

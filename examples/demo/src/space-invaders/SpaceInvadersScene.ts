@@ -41,6 +41,12 @@ export type SpaceInvadersSceneContext = {
   uiCamera: ReturnType<typeof createUiCamera>;
 };
 
+declare global {
+  interface Window {
+    __TE_SI__?: { state: SpaceInvadersState; playerX: () => number };
+  }
+}
+
 function spawnInvaders(world: World, atlas: SpaceInvadersAtlas, state: SpaceInvadersState): void {
   for (let row = 0; row < INVADER_ROWS; row++) {
     const kind: InvaderKind = row < 2 ? "A" : "B";
@@ -108,10 +114,18 @@ export function createSpaceInvadersScene(engine: Engine, atlas: SpaceInvadersAtl
     new HudRenderSystem(state, (score, lives, status) => {
       if (hud) {
         hud.textContent = `Score: ${score}   Lives: ${lives}   ${status}   — Arrow keys move, Space fires`;
+        hud.dataset.score = String(score);
+        hud.dataset.lives = String(lives);
+        hud.dataset.status = status;
       }
       document.title = `Space Invaders — ${score}`;
     }),
   );
+
+  window.__TE_SI__ = {
+    state,
+    playerX: () => world.get(playerId)?.transform.x ?? 0,
+  };
 
   return { engine, world, atlas, state, playerId, worldCamera: worldCam, uiCamera: uiCam };
 }

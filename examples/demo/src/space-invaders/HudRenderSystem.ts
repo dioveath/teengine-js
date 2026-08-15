@@ -14,7 +14,6 @@ export class HudRenderSystem implements RenderSystem {
     if (this.state.won) status = "You win!";
     if (this.state.gameOver && !this.state.won) status = "Game over";
     this.onHudUpdate(this.state.score, this.state.lives, status);
-
   }
 }
 
@@ -43,6 +42,7 @@ export class StarfieldRenderSystem implements RenderSystem {
         star.size,
         star.size,
         Color.rgb(twinkle, twinkle, twinkle + 0.1, 0.9),
+        { z: -1 },
       );
     }
     this.graphics.endLayer();

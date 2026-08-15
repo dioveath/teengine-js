@@ -1,3 +1,5 @@
+import { STRAIGHT_ALPHA_BLEND } from "./spriteShaders.js";
+
 export const SHAPE_SHADER = /* wgsl */ `
 struct VertexInput {
   @location(0) position: vec2<f32>,
@@ -48,7 +50,7 @@ export function createShapePipeline(device: GPUDevice, format: GPUTextureFormat)
     fragment: {
       module,
       entryPoint: "fs_main",
-      targets: [{ format }],
+      targets: [{ format, blend: STRAIGHT_ALPHA_BLEND }],
     },
     primitive: { topology: "triangle-list" },
   });

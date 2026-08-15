@@ -5,6 +5,8 @@ import {
   FORMATION_STEP_DOWN,
   INVADER_H,
   INVADER_W,
+  PLAYER_H,
+  PLAYER_Y,
   WORLD_W,
   formationSpeed,
   invaderRegion,
@@ -30,7 +32,7 @@ export class InvaderFormationSystem implements FixedSystem {
       this.updateInvaderSprites(world);
     }
 
-    const speed = formationSpeed(this.state) * this.state.formationDir * dt;
+    const dx = formationSpeed(this.state) * this.state.formationDir * dt;
     let minX = Infinity;
     let maxX = -Infinity;
     let maxY = -Infinity;
@@ -38,7 +40,7 @@ export class InvaderFormationSystem implements FixedSystem {
     for (const id of this.state.invaderIds) {
       const invader = world.get(id);
       if (!invader) continue;
-      invader.transform.x += speed;
+      invader.transform.x += dx;
       minX = Math.min(minX, invader.transform.x);
       maxX = Math.max(maxX, invader.transform.x);
       maxY = Math.max(maxY, invader.transform.y);
@@ -49,16 +51,17 @@ export class InvaderFormationSystem implements FixedSystem {
       (this.state.formationDir > 0 && maxX + halfW >= WORLD_W - FORMATION_MARGIN) ||
       (this.state.formationDir < 0 && minX - halfW <= FORMATION_MARGIN);
 
-    if (hitEdge) {
-      this.state.formationDir = this.state.formationDir === 1 ? -1 : 1;
-      for (const id of this.state.invaderIds) {
-        const invader = world.get(id);
-        if (!invader) continue;
-        invader.transform.y += FORMATION_STEP_DOWN;
-      }
-      if (maxY + INVADER_H * 0.5 + FORMATION_STEP_DOWN >= 520) {
-        this.state.gameOver = true;
-      }
+    if (!hitEdge) return;
+
+    this.state.formationDir = this.state.formationDir === 1 ? -1 : 1;
+    for (const id of this.state.invaderIds) {
+      const invader = world.get(id);
+      if (!invader) continue;
+      invader.transform.x -= dx;
+      invader.transform.y += FORMATION_STEP_DOWN;
+    }
+    if (maxY + INVADER_H * 0.5 + FORMATION_STEP_DOWN >= PLAYER_Y - PLAYER_H * 0.5) {
+      this.state.gameOver = true;
     }
   }
 

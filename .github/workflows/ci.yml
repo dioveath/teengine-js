@@ -23,3 +23,9 @@ jobs:
       - run: npm run typecheck
 
       - run: npm run test
+
+      - name: Install Playwright Chromium
+        working-directory: examples/demo
+        run: npx playwright install --with-deps chromium
+
+      - run: npm run test:e2e

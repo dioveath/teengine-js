@@ -34,8 +34,8 @@ describe("Input", () => {
     ({ input, canvas } = createCanvasInput());
     input.focus();
 
-    input.beginFrame();
     keyDown(canvas, "Space");
+    input.beginFrame();
     expect(input.keyPressed("Space")).toBe(true);
     expect(input.keyPressed("Space")).toBe(false);
 
@@ -48,12 +48,12 @@ describe("Input", () => {
     ({ input, canvas } = createCanvasInput());
     input.focus();
 
-    input.beginFrame();
     keyDown(canvas, "ArrowLeft");
+    input.beginFrame();
     expect(input.keyDown("ArrowLeft")).toBe(true);
 
-    input.beginFrame();
     keyUp(canvas, "ArrowLeft");
+    input.beginFrame();
     expect(input.keyReleased("ArrowLeft")).toBe(true);
     expect(input.keyDown("ArrowLeft")).toBe(false);
   });
@@ -76,10 +76,26 @@ describe("Input", () => {
     input.bindAction("jump", ["Space"]);
     input.focus();
 
-    input.beginFrame();
     keyDown(canvas, "Space");
+    input.beginFrame();
     expect(input.actionPressed("jump")).toBe(true);
     expect(input.actionPressed("jump")).toBe(false);
+  });
+
+  it("reports a press on the frame after a between-frame keydown, once", () => {
+    ({ input, canvas } = createCanvasInput());
+    input.focus();
+
+    input.beginFrame();
+    keyDown(canvas, "Space");
+    expect(input.keyPressed("Space")).toBe(false);
+
+    input.beginFrame();
+    expect(input.keyPressed("Space")).toBe(true);
+
+    input.beginFrame();
+    expect(input.keyPressed("Space")).toBe(false);
+    expect(input.keyDown("Space")).toBe(true);
   });
 
   it("returns zero axis when opposing actions are held", () => {

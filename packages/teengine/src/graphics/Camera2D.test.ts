@@ -35,6 +35,26 @@ describe("Camera2D", () => {
     expect(back.y).toBeCloseTo(world.y, 4);
   });
 
+  it("maps the look-at point to the viewport center when zoomed", () => {
+    const camera = new Camera2D();
+    camera.lookAt(200, 150);
+    camera.zoom = 2;
+
+    const screen = camera.worldToScreen(200, 150, 800, 600);
+    expect(screen.x).toBeCloseTo(400, 4);
+    expect(screen.y).toBeCloseTo(300, 4);
+  });
+
+  it("scales world offsets around the look-at point when zoomed", () => {
+    const camera = new Camera2D();
+    camera.lookAt(200, 150);
+    camera.zoom = 2;
+
+    const screen = camera.worldToScreen(320, 210, 800, 600);
+    expect(screen.x).toBeCloseTo(640, 4);
+    expect(screen.y).toBeCloseTo(420, 4);
+  });
+
   it("fitToRect uses contain scaling without stretch", () => {
     const camera = new Camera2D();
     camera.fitToRect(800, 600, 1600, 900);
@@ -42,6 +62,15 @@ describe("Camera2D", () => {
     expect(camera.zoom).toBeCloseTo(1.5, 4);
     expect(camera.x).toBe(400);
     expect(camera.y).toBe(300);
+  });
+
+  it("fitToRect maps the world center to the viewport center", () => {
+    const camera = new Camera2D();
+    camera.fitToRect(800, 600, 1600, 900);
+
+    const screen = camera.worldToScreen(400, 300, 1600, 900);
+    expect(screen.x).toBeCloseTo(800, 4);
+    expect(screen.y).toBeCloseTo(450, 4);
   });
 
   it("fitToRect caps zoom to max viewport size", () => {
