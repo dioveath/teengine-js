@@ -6,8 +6,19 @@ struct Globals {
 };
 `;
 
-export function supportsSizedBindingArrays(): boolean {
-  return typeof navigator !== "undefined" && navigator.gpu.wgslLanguageFeatures.has("sized_binding_array");
+const BINDING_ARRAY_PROBE = `
+@group(0) @binding(0) var t: binding_array<texture_2d<f32>, 2>;
+@group(0) @binding(1) var s: sampler;
+@fragment fn fs_main() -> @location(0) vec4<f32> {
+  return textureSampleLevel(t[0], s, vec2<f32>(0.0), 0.0);
+}
+`;
+
+export async function detectMaxTextures(device: GPUDevice): Promise<number> {
+  device.pushErrorScope("validation");
+  device.createShaderModule({ code: BINDING_ARRAY_PROBE });
+  const error = await device.popErrorScope();
+  return error ? 1 : MAX_TEXTURES;
 }
 
 export function spriteShader(maxTextures: number): string {

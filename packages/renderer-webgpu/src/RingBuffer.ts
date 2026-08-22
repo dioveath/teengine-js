@@ -39,7 +39,13 @@ export class RingBuffer {
   }
 
   private grow(needed: number): void {
-    const capacity = Math.max(needed, Math.max(this.capacity * 2, ALIGN * 64));
+    const maxBufferSize = this.device.limits.maxBufferSize;
+    if (needed > maxBufferSize) {
+      throw new Error(
+        `Frame buffer needs ${needed} bytes but the adapter allows ${maxBufferSize}.`,
+      );
+    }
+    const capacity = Math.min(Math.max(needed, this.capacity * 2, ALIGN * 64), maxBufferSize);
     const next = this.device.createBuffer({
       size: capacity,
       usage: GPUBufferUsage.VERTEX | GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,

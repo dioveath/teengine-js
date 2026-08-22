@@ -11,7 +11,7 @@ import {
   type TextureHandle,
 } from "@teengine/core";
 import { GpuCache, createNearestSampler } from "./GpuCache.js";
-import { MAX_TEXTURES, supportsSizedBindingArrays } from "./Shaders.js";
+import { detectMaxTextures, MAX_TEXTURES } from "./Shaders.js";
 import { Materials } from "./Shaders.js";
 import { RingBuffer } from "./RingBuffer.js";
 import { WebGPUContext } from "./WebGPUContext.js";
@@ -60,10 +60,10 @@ export class WebGpuFrameRenderer implements FrameRenderer {
 
   readonly maxTextures: number;
 
-  private constructor(gpu: WebGPUContext) {
+  private constructor(gpu: WebGPUContext, maxTextures: number) {
     this.gpu = gpu;
     this.ring = new RingBuffer(gpu.device);
-    this.maxTextures = supportsSizedBindingArrays() ? MAX_TEXTURES : 1;
+    this.maxTextures = maxTextures;
     this.materials = new Materials(gpu.device, gpu.format, this.maxTextures);
     this.cache = new GpuCache(
       gpu.device,
@@ -73,7 +73,8 @@ export class WebGpuFrameRenderer implements FrameRenderer {
   }
 
   static async create(canvas: HTMLCanvasElement): Promise<WebGpuFrameRenderer> {
-    return new WebGpuFrameRenderer(await WebGPUContext.create({ canvas }));
+    const gpu = await WebGPUContext.create({ canvas });
+    return new WebGpuFrameRenderer(gpu, await detectMaxTextures(gpu.device));
   }
 
   get canvas(): HTMLCanvasElement {
@@ -117,6 +118,7 @@ export class WebGpuFrameRenderer implements FrameRenderer {
   ): void {
     const packStart = performance.now();
     this.clearColor = clearColor;
+    this.ring.begin();
 
     for (let rank = 0; rank < cameras.length; rank++) {
       cameras[rank].getViewProjection(width, height, this.viewProjection);
