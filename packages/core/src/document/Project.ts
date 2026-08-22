@@ -1,20 +1,20 @@
-import { cloneDocument, parseGameDocument, type EntityRecord, type GameDocument } from "./schema.js";
+import { cloneGameProject, parseGameProject, type EntityRecord, type GameProject } from "./schema.js";
 import { verifyGame, type Diagnostic } from "./verify.js";
 
-export type HistoryEntry = { label: string; before: GameDocument; after: GameDocument };
+export type HistoryEntry = { label: string; before: GameProject; after: GameProject };
 
 export class Project {
-  private doc: GameDocument;
+  private doc: GameProject;
   private readonly undoStack: HistoryEntry[] = [];
   private readonly redoStack: HistoryEntry[] = [];
   private readonly listeners = new Set<() => void>();
   private lockOwner: string | null = null;
 
-  constructor(doc: GameDocument) {
-    this.doc = cloneDocument(doc);
+  constructor(doc: GameProject) {
+    this.doc = cloneGameProject(doc);
   }
 
-  get document(): GameDocument {
+  get document(): GameProject {
     return this.doc;
   }
 
@@ -33,17 +33,17 @@ export class Project {
     if (this.lockOwner === owner) this.lockOwner = null;
   }
 
-  write(label: string, mutate: (doc: GameDocument) => GameDocument, owner = "ui"): Diagnostic[] {
+  write(label: string, mutate: (doc: GameProject) => GameProject, owner = "ui"): Diagnostic[] {
     if (this.lockOwner && this.lockOwner !== owner) {
       return [{ path: "/", message: `Write locked by ${this.lockOwner}` }];
     }
-    const before = cloneDocument(this.doc);
-    const next = mutate(cloneDocument(this.doc));
-    const parsed = parseGameDocument(next);
+    const before = cloneGameProject(this.doc);
+    const next = mutate(cloneGameProject(this.doc));
+    const parsed = parseGameProject(next);
     const result = verifyGame(parsed);
     if (!result.ok) return result.diagnostics;
     this.doc = result.document;
-    this.undoStack.push({ label, before, after: cloneDocument(this.doc) });
+    this.undoStack.push({ label, before, after: cloneGameProject(this.doc) });
     this.redoStack.length = 0;
     this.emit();
     return [];
@@ -80,7 +80,7 @@ export class Project {
     );
   }
 
-  replace(doc: GameDocument, owner?: string): Diagnostic[] {
+  replace(doc: GameProject, owner?: string): Diagnostic[] {
     return this.write("replace", () => doc, owner);
   }
 
@@ -88,7 +88,7 @@ export class Project {
     const entry = this.undoStack.pop();
     if (!entry) return;
     this.redoStack.push(entry);
-    this.doc = cloneDocument(entry.before);
+    this.doc = cloneGameProject(entry.before);
     this.emit();
   }
 
@@ -96,7 +96,7 @@ export class Project {
     const entry = this.redoStack.pop();
     if (!entry) return;
     this.undoStack.push(entry);
-    this.doc = cloneDocument(entry.after);
+    this.doc = cloneGameProject(entry.after);
     this.emit();
   }
 

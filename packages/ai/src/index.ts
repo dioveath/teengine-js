@@ -1,10 +1,10 @@
 import {
   Engine,
   HeadlessRenderer,
-  parseGameDocument,
+  parseGameProject,
   verifyGame,
   gameOutline,
-  type GameDocument,
+  type GameProject,
   type Project,
   type World,
 } from "@teengine/core";
@@ -18,17 +18,17 @@ export const GAME_TOOLS: readonly ToolSpec[] = [
   { name: "play-headless", usage: "play-headless <ticks>", summary: "Step the live world without a GPU.", writes: false },
 ];
 
-export function outline(doc: GameDocument): string {
+export function outline(doc: GameProject): string {
   return gameOutline(doc);
 }
 
 export function verify(data: unknown) {
-  const parsed = parseGameDocument(data);
+  const parsed = parseGameProject(data);
   return verifyGame(parsed);
 }
 
 export function apply(project: Project, data: unknown, owner = "ai") {
-  const parsed = parseGameDocument(data);
+  const parsed = parseGameProject(data);
   return project.replace(parsed, owner);
 }
 
@@ -43,11 +43,11 @@ export function playHeadless(world: World, ticks: number): Record<string, unknow
   });
   engine.step(ticks);
   engine.stop();
-  return world.inspection.snapshot();
+  return world.inspector.snapshot();
 }
 
 export function systemPrompt(): string {
-  return `You edit a TeEngine GameDocument (schema teengine.GameDocument.1).
+  return `You edit a TeEngine GameProject (schema teengine.GameProject.1).
 Entities, assets, input, and layers are data. Gameplay systems are TypeScript in the project — do not invent engine recipes.
 
 ${GAME_TOOLS.map((t) => `- \`${t.usage}\`: ${t.summary}`).join("\n")}

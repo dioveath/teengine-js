@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const GAME_DOCUMENT_SCHEMA = "teengine.GameDocument.1" as const;
+export const GAME_PROJECT_SCHEMA = "teengine.GameProject.1" as const;
 
 const ColorSchema = z.object({
   r: z.number(),
@@ -94,8 +94,8 @@ const EntityRecordSchema = z.object({
   spin: z.object({ speed: z.number() }).optional(),
 });
 
-export const GameDocumentSchema = z.object({
-  schema: z.literal(GAME_DOCUMENT_SCHEMA),
+export const GameProjectSchema = z.object({
+  schema: z.literal(GAME_PROJECT_SCHEMA),
   meta: z.object({
     title: z.string(),
     world: z.object({ w: z.number(), h: z.number() }),
@@ -128,14 +128,14 @@ export const GameDocumentSchema = z.object({
   data: z.record(z.unknown()).optional(),
 });
 
-export type GameDocument = z.infer<typeof GameDocumentSchema>;
+export type GameProject = z.infer<typeof GameProjectSchema>;
 export type EntityRecord = z.infer<typeof EntityRecordSchema>;
-export type SceneRecord = GameDocument["scenes"][number];
-export type AssetRecord = GameDocument["assets"][number];
+export type SceneRecord = GameProject["scenes"][number];
+export type AssetRecord = GameProject["assets"][number];
 
-export function emptyDocument(title = "Untitled"): GameDocument {
+export function emptyGameProject(title = "Untitled"): GameProject {
   return {
-    schema: GAME_DOCUMENT_SCHEMA,
+    schema: GAME_PROJECT_SCHEMA,
     meta: { title, world: { w: 800, h: 600 } },
     assets: [],
     input: {},
@@ -148,10 +148,10 @@ export function emptyDocument(title = "Untitled"): GameDocument {
   };
 }
 
-export function parseGameDocument(data: unknown): GameDocument {
-  return GameDocumentSchema.parse(data);
+export function parseGameProject(data: unknown): GameProject {
+  return GameProjectSchema.parse(data);
 }
 
-export function cloneDocument(doc: GameDocument): GameDocument {
+export function cloneGameProject(doc: GameProject): GameProject {
   return structuredClone(doc);
 }

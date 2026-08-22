@@ -1,13 +1,13 @@
-import type { GameDocument } from "./schema.js";
-import { cloneDocument } from "./schema.js";
+import type { GameProject } from "./schema.js";
+import { cloneGameProject } from "./schema.js";
 
 export type Diagnostic = { path: string; message: string };
 
 export type VerifyResult =
-  | { ok: true; document: GameDocument; diagnostics: Diagnostic[] }
+  | { ok: true; document: GameProject; diagnostics: Diagnostic[] }
   | { ok: false; diagnostics: Diagnostic[] };
 
-export function verifyGame(doc: GameDocument): VerifyResult {
+export function verifyGame(doc: GameProject): VerifyResult {
   const diagnostics: Diagnostic[] = [];
   const assetKeys = new Set(doc.assets.map((a) => a.key));
   const sceneIds = new Set(doc.scenes.map((s) => s.id));
@@ -51,10 +51,10 @@ export function verifyGame(doc: GameDocument): VerifyResult {
   }
 
   if (diagnostics.length) return { ok: false, diagnostics };
-  return { ok: true, document: cloneDocument(doc), diagnostics };
+  return { ok: true, document: cloneGameProject(doc), diagnostics };
 }
 
-export function gameOutline(doc: GameDocument): string {
+export function gameOutline(doc: GameProject): string {
   const lines = [
     `${doc.meta.title} ${doc.meta.world.w}x${doc.meta.world.h}`,
     `scenes: ${doc.scenes.map((s) => s.id).join(", ")} (start ${doc.startScene})`,

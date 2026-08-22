@@ -1,4 +1,4 @@
-export class Inspection {
+export class Inspector {
   private readonly channels = new Map<string, () => unknown>();
 
   set(name: string, read: () => unknown): void {

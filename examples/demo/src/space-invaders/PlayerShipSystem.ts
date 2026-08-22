@@ -1,9 +1,9 @@
-import type { EntityId, FixedSystem, FixedSystemContext } from "teengine";
+import type { EntityId, FixedUpdateSystem, FixedUpdateSystemContext } from "teengine";
 import { Layers } from "teengine";
 import { SI_ATLAS } from "./createSpaceInvadersAtlas.js";
 import { PLAYER_H, PLAYER_SPEED, PLAYER_W, WORLD_W, spriteSize, type SpaceInvadersState } from "./spaceInvadersState.js";
 
-export class PlayerShipSystem implements FixedSystem {
+export class PlayerShipSystem implements FixedUpdateSystem {
   readonly name = "PlayerShipSystem";
 
   constructor(
@@ -11,7 +11,7 @@ export class PlayerShipSystem implements FixedSystem {
     private readonly state: SpaceInvadersState,
   ) {}
 
-  fixedUpdate(ctx: FixedSystemContext): void {
+  fixedUpdate(ctx: FixedUpdateSystemContext): void {
     const { world, input, dt } = ctx;
     if (this.state.gameOver || this.state.won) return;
 

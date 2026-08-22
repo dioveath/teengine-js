@@ -3,7 +3,7 @@ import { SI_ATLAS } from "./createSpaceInvadersAtlas.js";
 import {
   Color,
   Layers,
-  WorldEntityRenderSystem,
+  EntityRenderSystem,
   createUiCamera,
   createWorldCamera,
   World,
@@ -108,11 +108,11 @@ export function createSpaceInvadersScene(engine: Engine, atlas: SpaceInvadersAtl
 
   const hud = document.getElementById("hud");
 
-  world.addFixedSystem(new CombatSystem(playerId, state));
-  world.addFixedSystem(new PlayerShipSystem(playerId, state));
-  world.addFixedSystem(new InvaderFormationSystem(state));
+  world.addFixedUpdateSystem(new CombatSystem(playerId, state));
+  world.addFixedUpdateSystem(new PlayerShipSystem(playerId, state));
+  world.addFixedUpdateSystem(new InvaderFormationSystem(state));
   world.addRenderSystem(new StarfieldRenderSystem(engine.graphics));
-  world.addRenderSystem(new WorldEntityRenderSystem(engine.graphics));
+  world.addRenderSystem(new EntityRenderSystem(engine.graphics));
   world.addRenderSystem(
     new HudRenderSystem(state, (score, lives, status) => {
       if (hud) {
@@ -126,9 +126,9 @@ export function createSpaceInvadersScene(engine: Engine, atlas: SpaceInvadersAtl
     }),
   );
 
-  world.inspection.set("state", () => state);
-  world.inspection.set("playerX", () => world.get(playerId)?.transform.x ?? 0);
-  window.__TE__ = { snapshot: () => world.inspection.snapshot() };
+  world.inspector.set("state", () => state);
+  world.inspector.set("playerX", () => world.get(playerId)?.transform.x ?? 0);
+  window.__TE__ = { snapshot: () => world.inspector.snapshot() };
 
   return { engine, world, atlas, state, playerId, worldCamera: worldCam, uiCamera: uiCam };
 }

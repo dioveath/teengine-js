@@ -1,6 +1,6 @@
 import type { SpriteFrame } from "../graphics/sprite.js";
 
-export class AssetBank {
+export class AssetManager {
   private readonly atlases = new Map<string, Map<string, SpriteFrame>>();
 
   add(asset: string, regions: Record<string, SpriteFrame>): void {

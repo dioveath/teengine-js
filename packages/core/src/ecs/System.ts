@@ -2,7 +2,7 @@ import type { Input } from "../input/Input.js";
 import type { PhysicsAdapter } from "./PhysicsAdapter.js";
 import type { World } from "./World.js";
 
-export type FixedSystemContext = {
+export type FixedUpdateSystemContext = {
   world: World;
   dt: number;
   time: number;
@@ -11,15 +11,15 @@ export type FixedSystemContext = {
   physics: PhysicsAdapter | null;
 };
 
-export type RenderSystemContext = FixedSystemContext & {
+export type RenderSystemContext = FixedUpdateSystemContext & {
   alpha: number;
   width: number;
   height: number;
 };
 
-export interface FixedSystem {
+export interface FixedUpdateSystem {
   readonly name: string;
-  fixedUpdate(ctx: FixedSystemContext): void;
+  fixedUpdate(ctx: FixedUpdateSystemContext): void;
 }
 
 export interface RenderSystem {

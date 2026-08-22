@@ -1,10 +1,10 @@
-import type { GameDocument } from "@teengine/core";
+import type { GameProject } from "@teengine/core";
 
 export type ProjectRef = { ownerId: string; projectId: string };
 
 export interface ProjectRepository {
-  get(ref: ProjectRef): Promise<GameDocument | null>;
-  put(ref: ProjectRef, doc: GameDocument): Promise<void>;
+  get(ref: ProjectRef): Promise<GameProject | null>;
+  put(ref: ProjectRef, doc: GameProject): Promise<void>;
   delete(ref: ProjectRef): Promise<void>;
   list(ownerId: string): Promise<string[]>;
 }
@@ -13,8 +13,8 @@ function key(ref: ProjectRef): string {
   return `${ref.ownerId}/${ref.projectId}`;
 }
 
-export function createMemoryRepository(seed: Iterable<[ProjectRef, GameDocument]> = []): ProjectRepository {
-  const store = new Map<string, GameDocument>();
+export function createMemoryRepository(seed: Iterable<[ProjectRef, GameProject]> = []): ProjectRepository {
+  const store = new Map<string, GameProject>();
   for (const [ref, doc] of seed) store.set(key(ref), structuredClone(doc));
 
   return {

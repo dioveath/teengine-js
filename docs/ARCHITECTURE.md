@@ -5,7 +5,7 @@ TeEngine is a 2D engine with a **document** (JSON) and a **runtime** (ECS + loop
 ```
 Game / studio / agent
     ↓ commands (Project)
-GameDocument          Zod schema, scenes, entities, assets, input
+GameProject          Zod schema, scenes, entities, assets, input
     ↓ hydrate
 World                 entities, systems, inspection
     ↓

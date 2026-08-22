@@ -45,8 +45,8 @@ export function renderWorldEntities(
   }
 }
 
-export class WorldEntityRenderSystem implements RenderSystem {
-  readonly name = "WorldEntityRenderSystem";
+export class EntityRenderSystem implements RenderSystem {
+  readonly name = "EntityRenderSystem";
   private readonly buckets = new Map<string, LayerBucket>();
 
   constructor(private readonly graphics: Graphics) {}

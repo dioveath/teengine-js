@@ -15,7 +15,7 @@ Sources reviewed and the upgrades they motivated. All additions are genre-neutra
 | Principle | Source | Status before | Upgrade |
 |---|---|---|---|
 | Fixed timestep + alpha + clamp | Fiedler | already correct | none needed |
-| Update method | GPP | `FixedSystem`/`RenderSystem` | none needed |
+| Update method | GPP | `FixedUpdateSystem`/`RenderSystem` | none needed |
 | Event Queue | GPP ch.14 | missing | `ecs/Events.ts` — `EventBus`, queued dispatch drained at one point in `World.fixedUpdate`; re-entrant emits deferred |
 | Spatial Partition | GPP ch.16 | missing | `ecs/SpatialGrid.ts` — uniform grid, circle/rect queries, reusable output buffers |
 | Object Pool | GPP ch.6 | missing | `utils/index.ts` — `Pool<T>` with factory/reset |
@@ -30,7 +30,7 @@ Sources reviewed and the upgrades they motivated. All additions are genre-neutra
 
 - Archetype/SoA entity storage: current Map-based layout is sufficient at demo scale; revisiting requires profiling evidence.
 - Dirty-flag transform caching: draw cost is dominated by batching, not matrix math.
-- Service locator: `Inspection` covers the debugging need without global mutable state.
+- Service locator: `Inspector` covers the debugging need without global mutable state.
 
 ## Verification
 

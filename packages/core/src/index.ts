@@ -29,7 +29,7 @@ export { spriteFrame } from "./graphics/sprite.js";
 export type { DrawCommand, DrawOptions, SpriteDrawCommand, ShapeRectCommand, ShapeCircleCommand, ShapeLineCommand } from "./graphics/DrawQueue.js";
 export type { LayerConfig } from "./graphics/LayerRegistry.js";
 
-export { World, Transform, AssetBank } from "./ecs/index.js";
+export { World, Transform, AssetManager } from "./ecs/index.js";
 export type { TransformData } from "./ecs/index.js";
 export { EventBus } from "./ecs/Events.js";
 export type { EventHandler, EventSubscription } from "./ecs/Events.js";
@@ -50,9 +50,9 @@ export type {
   CameraTargetTag,
   CollisionListenerTag,
   SpinComponent,
-  FixedSystem,
+  FixedUpdateSystem,
   RenderSystem,
-  FixedSystemContext,
+  FixedUpdateSystemContext,
   RenderSystemContext,
   PhysicsAdapter,
   CollisionLayers,
@@ -65,20 +65,20 @@ export type { TransformSnapshot } from "./ecs/interpolation.js";
 export { COLLIDE_ALL, CollisionGroups, layers } from "./ecs/index.js";
 export { SpinSystem } from "./ecs/systems/SpinSystem.js";
 export { CameraFollowSystem } from "./ecs/systems/CameraFollowSystem.js";
-export { WorldEntityRenderSystem } from "./ecs/systems/EntityRenderSystem.js";
+export { EntityRenderSystem } from "./ecs/systems/EntityRenderSystem.js";
 
 export { Input, ActionMap } from "./input/index.js";
 export type { MousePosition } from "./input/index.js";
 
-export { Inspection } from "./inspect/Inspection.js";
+export { Inspector } from "./inspect/Inspector.js";
 
 export {
-  GAME_DOCUMENT_SCHEMA,
-  GameDocumentSchema,
-  emptyDocument,
-  parseGameDocument,
-  cloneDocument,
-  hydrateScene,
+  GAME_PROJECT_SCHEMA,
+  GameProjectSchema,
+  emptyGameProject,
+  parseGameProject,
+  cloneGameProject,
+  loadScene,
   recordToSpawn,
   entityToRecord,
   sceneFromWorld,
@@ -87,7 +87,7 @@ export {
   Project,
 } from "./document/index.js";
 export type {
-  GameDocument,
+  GameProject,
   EntityRecord,
   SceneRecord,
   AssetRecord,

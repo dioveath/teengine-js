@@ -1,12 +1,12 @@
 import type { LayerSortMode } from "../graphics/LayerRegistry.js";
-import { Inspection } from "../inspect/Inspection.js";
-import { AssetBank } from "./Assets.js";
+import { Inspector } from "../inspect/Inspector.js";
+import { AssetManager } from "./Assets.js";
 import { ComponentStore } from "./ComponentStore.js";
 import { EventBus } from "./Events.js";
 import { createEntity, hasPhysics, type Entity, type EntityId, type SpawnConfig } from "./Entity.js";
 import type { TransformSnapshot } from "./interpolation.js";
 import type { PhysicsAdapter } from "./PhysicsAdapter.js";
-import type { FixedSystem, FixedSystemContext, RenderSystem, RenderSystemContext } from "./System.js";
+import type { FixedUpdateSystem, FixedUpdateSystemContext, RenderSystem, RenderSystemContext } from "./System.js";
 
 export type LayerBucket = {
   sprites: Entity[];
@@ -14,14 +14,14 @@ export type LayerBucket = {
 };
 
 export class World {
-  readonly assets = new AssetBank();
-  readonly inspection = new Inspection();
+  readonly assets = new AssetManager();
+  readonly inspector = new Inspector();
   readonly events = new EventBus();
   readonly components = new ComponentStore();
 
   private readonly entities = new Map<EntityId, Entity>();
-  private readonly fixedSystems: FixedSystem[] = [];
-  private readonly postPhysicsSystems: FixedSystem[] = [];
+  private readonly fixedSystems: FixedUpdateSystem[] = [];
+  private readonly postPhysicsSystems: FixedUpdateSystem[] = [];
   private readonly renderSystems: RenderSystem[] = [];
   private readonly scratchTransform: TransformSnapshot = {
     x: 0,
@@ -36,11 +36,11 @@ export class World {
 
   constructor(private physics: PhysicsAdapter | null = null) {}
 
-  addFixedSystem(system: FixedSystem): void {
+  addFixedUpdateSystem(system: FixedUpdateSystem): void {
     this.fixedSystems.push(system);
   }
 
-  addPostPhysicsSystem(system: FixedSystem): void {
+  addPostPhysicsSystem(system: FixedUpdateSystem): void {
     this.postPhysicsSystems.push(system);
   }
 
@@ -99,7 +99,7 @@ export class World {
     this.time = 0;
   }
 
-  fixedUpdate(ctx: Omit<FixedSystemContext, "world" | "physics">): void {
+  fixedUpdate(ctx: Omit<FixedUpdateSystemContext, "world" | "physics">): void {
     this.time += ctx.dt;
     const fullCtx = { ...ctx, world: this, physics: this.physics };
 

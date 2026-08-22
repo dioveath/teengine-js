@@ -1,4 +1,4 @@
-import { emptyDocument, Engine, Project, World } from "@teengine/core";
+import { emptyGameProject, Engine, Project, World } from "@teengine/core";
 import { mountEditor } from "@teengine/editor";
 import { createMemoryRepository } from "@teengine/storage";
 import { createEngine } from "teengine";
@@ -11,7 +11,7 @@ if (!(canvasEl instanceof HTMLCanvasElement) || !(hostEl instanceof HTMLElement)
 const canvas = canvasEl;
 const host = hostEl;
 
-const project = new Project(emptyDocument("Studio"));
+const project = new Project(emptyGameProject("Studio"));
 const repo = createMemoryRepository([[{ ownerId: "local", projectId: "studio" }, project.document]]);
 
 let engine: Engine | null = null;

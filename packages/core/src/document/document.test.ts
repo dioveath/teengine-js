@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { World } from "../ecs/World.js";
 import { spriteFrame } from "../graphics/sprite.js";
-import { hydrateScene, sceneFromWorld } from "./hydrate.js";
-import { emptyDocument } from "./schema.js";
+import { loadScene, sceneFromWorld } from "./hydrate.js";
+import { emptyGameProject } from "./schema.js";
 import { verifyGame } from "./verify.js";
 import { Project } from "./Project.js";
 
-describe("GameDocument", () => {
+describe("GameProject", () => {
   it("round-trips a spawned sprite entity", () => {
     const world = new World();
     world.assets.add("pack", {
@@ -27,15 +27,15 @@ describe("GameDocument", () => {
     world2.assets.add("pack", {
       player: spriteFrame({ id: 1 }, 32, 32, 0, 0, 16, 16),
     });
-    const doc = emptyDocument();
+    const doc = emptyGameProject();
     doc.scenes = [scene];
-    const ids = hydrateScene(world2, doc);
+    const ids = loadScene(world2, doc);
     expect(ids.get("player")).toBeDefined();
     expect(world2.get(ids.get("player")!)?.transform.x).toBe(40);
   });
 
   it("rejects unknown assets", () => {
-    const doc = emptyDocument();
+    const doc = emptyGameProject();
     doc.scenes[0]!.entities.push({
       id: "ghost",
       sprite: { asset: "missing", region: "x", layer: "world" },
@@ -45,7 +45,7 @@ describe("GameDocument", () => {
   });
 
   it("applies project writes after verify", () => {
-    const project = new Project(emptyDocument());
+    const project = new Project(emptyGameProject());
     const errors = project.spawn("main", { id: "a", transform: { x: 1, y: 2 } });
     expect(errors).toEqual([]);
     expect(project.document.scenes[0]?.entities).toHaveLength(1);

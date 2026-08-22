@@ -1,7 +1,7 @@
 import type { Color } from "../math/index.js";
 import type { Entity, SpawnConfig } from "../ecs/Entity.js";
 import type { World } from "../ecs/World.js";
-import type { EntityRecord, GameDocument } from "./schema.js";
+import type { EntityRecord, GameProject } from "./schema.js";
 
 function color(c: { r: number; g: number; b: number; a?: number }): Color {
   return { r: c.r, g: c.g, b: c.b, a: c.a ?? 1 };
@@ -34,7 +34,7 @@ export function recordToSpawn(record: EntityRecord): SpawnConfig {
   };
 }
 
-export function hydrateScene(world: World, doc: GameDocument, sceneId = doc.startScene): Map<string, number> {
+export function loadScene(world: World, doc: GameProject, sceneId = doc.startScene): Map<string, number> {
   const scene = doc.scenes.find((s) => s.id === sceneId);
   if (!scene) throw new Error(`Scene "${sceneId}" not found.`);
 

@@ -1,10 +1,10 @@
-import type { EntityId, FixedSystem } from "teengine";
+import type { EntityId, FixedUpdateSystem } from "teengine";
 import type { PlatformerPhysicsState } from "./PlatformerPhysicsEventsSystem.js";
 
 const MOVE_SPEED = 220;
 const JUMP_IMPULSE = 280;
 
-export class PlayerControllerSystem implements FixedSystem {
+export class PlayerControllerSystem implements FixedUpdateSystem {
   readonly name = "PlayerControllerSystem";
 
   constructor(
@@ -12,7 +12,7 @@ export class PlayerControllerSystem implements FixedSystem {
     private readonly physicsState: PlatformerPhysicsState,
   ) {}
 
-  fixedUpdate(ctx: import("teengine").FixedSystemContext): void {
+  fixedUpdate(ctx: import("teengine").FixedUpdateSystemContext): void {
     const { world, input, physics } = ctx;
     if (!physics) return;
 

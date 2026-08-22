@@ -1,4 +1,4 @@
-import type { FixedSystem, FixedSystemContext, World } from "teengine";
+import type { FixedUpdateSystem, FixedUpdateSystemContext, World } from "teengine";
 import {
   FORMATION_MARGIN,
   FORMATION_STEP_DOWN,
@@ -12,12 +12,12 @@ import {
   type SpaceInvadersState,
 } from "./spaceInvadersState.js";
 
-export class InvaderFormationSystem implements FixedSystem {
+export class InvaderFormationSystem implements FixedUpdateSystem {
   readonly name = "InvaderFormationSystem";
 
   constructor(private readonly state: SpaceInvadersState) {}
 
-  fixedUpdate(ctx: FixedSystemContext): void {
+  fixedUpdate(ctx: FixedUpdateSystemContext): void {
     const { world, dt } = ctx;
     if (this.state.gameOver || this.state.won || this.state.invaderIds.length === 0) return;
 

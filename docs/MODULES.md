@@ -1,6 +1,6 @@
 # What belongs in core
 
-Primitives to **run, draw, simulate, and input**, plus a **GameDocument** the editor/AI share.
+Primitives to **run, draw, simulate, and input**, plus a **GameProject** the editor/AI share.
 
 Not in core: Rapier, WGSL, React, generation vendors, genre kits.
 

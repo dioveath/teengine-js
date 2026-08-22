@@ -4,7 +4,7 @@ import {
   Color,
   SpinSystem,
   World,
-  WorldEntityRenderSystem,
+  EntityRenderSystem,
   createUiCamera,
   createWorldCamera,
   Layers,
@@ -133,13 +133,13 @@ export function createPlatformerScene(
     sprite: { asset: PLATFORMER_ATLAS, region: "uiHeart", layer: Layers.ui, origin: { x: 0, y: 0 } },
   });
 
-  world.addFixedSystem(new PlayerControllerSystem(playerId, physicsState));
+  world.addFixedUpdateSystem(new PlayerControllerSystem(playerId, physicsState));
   world.addPostPhysicsSystem(
     new PlatformerPhysicsEventsSystem(playerId, groundId, new Set([coinId]), physicsState),
   );
-  world.addFixedSystem(new SpinSystem());
+  world.addFixedUpdateSystem(new SpinSystem());
   world.addRenderSystem(new CameraFollowSystem(worldCam));
-  world.addRenderSystem(new WorldEntityRenderSystem(engine.graphics));
+  world.addRenderSystem(new EntityRenderSystem(engine.graphics));
   world.addRenderSystem(new DebugOverlaySystem(engine.graphics, { groundY: GROUND_Y, worldCamera: worldCam }));
 
   return {

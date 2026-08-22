@@ -1,11 +1,11 @@
-import type { EntityId, FixedSystem } from "teengine";
+import type { EntityId, FixedUpdateSystem } from "teengine";
 
 export type PlatformerPhysicsState = {
   grounded: boolean;
 };
 
 /** Handles collision events after the physics step (ground contact, coin pickup). */
-export class PlatformerPhysicsEventsSystem implements FixedSystem {
+export class PlatformerPhysicsEventsSystem implements FixedUpdateSystem {
   readonly name = "PlatformerPhysicsEventsSystem";
 
   constructor(
@@ -15,7 +15,7 @@ export class PlatformerPhysicsEventsSystem implements FixedSystem {
     private readonly state: PlatformerPhysicsState,
   ) {}
 
-  fixedUpdate(ctx: import("teengine").FixedSystemContext): void {
+  fixedUpdate(ctx: import("teengine").FixedUpdateSystemContext): void {
     const { world, physics } = ctx;
     if (!physics) return;
 
