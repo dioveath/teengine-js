@@ -6,10 +6,24 @@ struct Globals {
 };
 `;
 
-export const SPRITE_SHADER = /* wgsl */ `
+export function supportsSizedBindingArrays(): boolean {
+  return typeof navigator !== "undefined" && navigator.gpu.wgslLanguageFeatures.has("sized_binding_array");
+}
+
+export function spriteShader(maxTextures: number): string {
+  const declarations =
+    maxTextures > 1
+      ? `@group(1) @binding(0) var textures: binding_array<texture_2d<f32>, ${maxTextures}>;`
+      : "@group(1) @binding(0) var spriteTexture: texture_2d<f32>;";
+  const sampleExpression =
+    maxTextures > 1
+      ? "textureSampleLevel(textures[u32(input.texIndex)], texSampler, input.uv, 0.0)"
+      : "textureSampleLevel(spriteTexture, texSampler, input.uv, 0.0)";
+
+  return `
 ${GLOBALS_WGSL}
 @group(0) @binding(0) var<uniform> globals: Globals;
-@group(1) @binding(0) var textures: binding_array<texture_2d<f32>, ${MAX_TEXTURES}>;
+${declarations}
 @group(1) @binding(1) var texSampler: sampler;
 
 struct VertexIn {
@@ -52,10 +66,11 @@ fn vs_main(input: VertexIn, @builtin(vertex_index) vi: u32) -> VertexOut {
 
 @fragment
 fn fs_main(input: VertexOut) -> @location(0) vec4<f32> {
-  let sample = textureSampleLevel(textures[u32(input.texIndex)], texSampler, input.uv, 0.0);
+  let sample = ${sampleExpression};
   return sample * input.color;
 }
 `;
+}
 
 export const SHAPE_SHADER = /* wgsl */ `
 ${GLOBALS_WGSL}
@@ -207,14 +222,16 @@ function createMaterialPipeline(spec: PipelineSpec): MaterialPipeline {
 }
 
 export class Materials {
+  readonly maxTextures: number;
   readonly sprites: MaterialPipeline;
   readonly shapes: MaterialPipeline;
 
-  constructor(device: GPUDevice, format: GPUTextureFormat) {
+  constructor(device: GPUDevice, format: GPUTextureFormat, maxTextures: number) {
+    this.maxTextures = maxTextures;
     const spriteSpec = {
       device,
       format,
-      code: SPRITE_SHADER,
+      code: spriteShader(maxTextures),
       instanceStrideBytes: 13 * 4,
       attributes: ([
         { shaderLocation: 0, offset: 0, format: "float32x4" },

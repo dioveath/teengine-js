@@ -10,7 +10,8 @@ import {
   type RenderStats,
   type TextureHandle,
 } from "@teengine/core";
-import { GpuCache, createNearestSampler, MAX_TEXTURES } from "./GpuCache.js";
+import { GpuCache, createNearestSampler } from "./GpuCache.js";
+import { MAX_TEXTURES, supportsSizedBindingArrays } from "./Shaders.js";
 import { Materials } from "./Shaders.js";
 import { RingBuffer } from "./RingBuffer.js";
 import { WebGPUContext } from "./WebGPUContext.js";
@@ -57,10 +58,13 @@ export class WebGpuFrameRenderer implements FrameRenderer {
   private height = 1;
   private clearColor: Color = Color.hex("#0d1117");
 
+  readonly maxTextures: number;
+
   private constructor(gpu: WebGPUContext) {
     this.gpu = gpu;
     this.ring = new RingBuffer(gpu.device);
-    this.materials = new Materials(gpu.device, gpu.format);
+    this.maxTextures = supportsSizedBindingArrays() ? MAX_TEXTURES : 1;
+    this.materials = new Materials(gpu.device, gpu.format, this.maxTextures);
     this.cache = new GpuCache(
       gpu.device,
       this.materials.sprites.pipeline.getBindGroupLayout(1),
@@ -175,7 +179,7 @@ export class WebGpuFrameRenderer implements FrameRenderer {
       if (d[i + R.kind] === DRAW_SPRITE) {
         let slot = slots.indexOf(d[i + R.texId]);
         if (slot < 0) {
-          if (slots.length >= MAX_TEXTURES) {
+          if (slots.length >= this.maxTextures) {
             closeBatches();
             slots = [];
             slot = 0;

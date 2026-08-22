@@ -43,9 +43,17 @@ async function loadFrames(graphics: Engine["graphics"], count: number): Promise<
   return frames;
 }
 
+function hud(text: string): void {
+  const el = document.getElementById("hud");
+  if (el) el.textContent = text;
+}
+
 async function main(): Promise<void> {
   const canvas = document.getElementById("canvas");
   if (!(canvas instanceof HTMLCanvasElement)) throw new Error("#canvas missing");
+
+  window.addEventListener("error", (e) => hud(`Error: ${e.message}`));
+  window.addEventListener("unhandledrejection", (e) => hud(`Error: ${e.reason}`));
 
   try {
     const { createEngine } = await import("teengine");
@@ -116,7 +124,7 @@ function run(engine: Engine, canvas: HTMLCanvasElement): void {
       const avgFrame = sorted.reduce((a, b) => a + b, 0) / sorted.length;
       const heapEnd =
         "memory" in performance ? (performance as any).memory.usedJSHeapSize : null;
-      window.__BENCH__!.results = {
+      const results: BenchResults = {
         sprites: COUNT,
         avgFps: 1000 / avgFrame,
         minFps: 1000 / sorted[sorted.length - 1],
@@ -127,6 +135,12 @@ function run(engine: Engine, canvas: HTMLCanvasElement): void {
         textureBinds: graphics.stats.textureBinds,
         heapGrowthMb: heapStart !== null && heapEnd !== null ? (heapEnd - heapStart) / 1048576 : null,
       };
+      window.__BENCH__!.results = results;
+      hud(
+        `${COUNT.toLocaleString()} sprites · ${results.avgFps.toFixed(1)} fps avg · ` +
+        `${results.drawCalls} draw calls · ${results.textureBinds} texture binds · ` +
+        `pack ${results.avgPackMs.toFixed(2)}ms · p99 frame ${results.p99FrameMs.toFixed(1)}ms`,
+      );
     }
   });
 }
