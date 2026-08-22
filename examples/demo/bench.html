@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Render Benchmark — TeEngine</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #0d1117;
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        outline: none;
+      }
+
+      #hud {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        color: #c9d1d9;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 14px;
+        pointer-events: none;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+      }
+
+      #fallback {
+        display: none;
+        color: #f0f6fc;
+        font-family: system-ui, sans-serif;
+        padding: 2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="hud">Loading…</div>
+    <canvas id="canvas" tabindex="0"></canvas>
+    <div id="fallback">
+      <h1>WebGPU not available</h1>
+    </div>
+    <script type="module" src="/src/bench/main.ts"></script>
+  </body>
+</html>
