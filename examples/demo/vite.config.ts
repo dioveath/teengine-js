@@ -2,7 +2,6 @@ import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
-import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -12,7 +11,7 @@ const base = process.env.VITE_BASE ?? "/";
 
 export default defineConfig({
   base,
-  plugins: [wasm(), topLevelAwait()],
+  plugins: [wasm()],
   resolve: {
     alias: { "@dimforge/rapier2d": rapier },
   },

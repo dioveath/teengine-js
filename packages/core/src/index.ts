@@ -21,13 +21,13 @@ export {
 export { HeadlessRenderer } from "./graphics/HeadlessRenderer.js";
 export { Layers } from "./graphics/Layers.js";
 export type { LayerName } from "./graphics/Layers.js";
+export { RenderQueue, DRAW_SPRITE, DRAW_BOX, DRAW_CIRCLE, DRAW_CAPSULE, RECORD_FLOATS, R } from "./graphics/RenderQueue.js";
+export type { RenderStats } from "./graphics/FrameRenderer.js";
 export type { FitToRectMode, FitToRectOptions } from "./graphics/Camera2D.js";
-export type { LayerSortMode, ShapeOptions } from "./graphics/Graphics.js";
+export type { LayerSortMode, DrawOptions, ShapeOptions, RegisterLayerOptions } from "./graphics/Graphics.js";
 export type { FrameRenderer } from "./graphics/FrameRenderer.js";
 export type { SpriteFrame, TextureHandle } from "./graphics/sprite.js";
 export { spriteFrame } from "./graphics/sprite.js";
-export type { DrawCommand, DrawOptions, SpriteDrawCommand, ShapeRectCommand, ShapeCircleCommand, ShapeLineCommand } from "./graphics/DrawQueue.js";
-export type { LayerConfig } from "./graphics/LayerRegistry.js";
 
 export { World, Transform, AssetManager } from "./ecs/index.js";
 export type { TransformData } from "./ecs/index.js";

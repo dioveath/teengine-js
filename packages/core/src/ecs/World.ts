@@ -1,4 +1,4 @@
-import type { LayerSortMode } from "../graphics/LayerRegistry.js";
+import type { LayerSortMode } from "../graphics/Graphics.js";
 import { Inspector } from "../inspect/Inspector.js";
 import { AssetManager } from "./Assets.js";
 import { ComponentStore } from "./ComponentStore.js";

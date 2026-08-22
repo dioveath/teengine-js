@@ -1,14 +1,8 @@
 import type { Color } from "../math/index.js";
-import {
-  DrawQueue,
-  resolveDrawOptions,
-  resolveShapeZ,
-  type DrawOptions,
-  type ShapeOptions,
-} from "./DrawQueue.js";
-import type { FrameRenderer } from "./FrameRenderer.js";
-import { LayerRegistry, type LayerSortMode } from "./LayerRegistry.js";
 import { Camera2D } from "./Camera2D.js";
+import type { FrameRenderer } from "./FrameRenderer.js";
+import { RenderQueue } from "./RenderQueue.js";
+import { DRAW_BOX, DRAW_CAPSULE, DRAW_CIRCLE } from "./RenderQueue.js";
 import type { SpriteFrame, TextureHandle } from "./sprite.js";
 import {
   createCanvasRasterizer,
@@ -17,39 +11,57 @@ import {
   type TextStyle,
 } from "./text/GlyphAtlas.js";
 
+export type LayerSortMode = "y" | "z" | "none";
+
+export type DrawOptions = {
+  x: number;
+  y: number;
+  z?: number;
+  scale?: { x: number; y: number };
+  rotation?: number;
+  origin?: { x: number; y: number };
+  tint?: Color;
+  flipX?: boolean;
+  flipY?: boolean;
+};
+
+export type ShapeOptions = { z?: number };
+
+export type TextDrawOptions = TextStyle & {
+  z?: number;
+  color?: Color;
+  scale?: number;
+  scaleY?: number;
+  align?: "left" | "center" | "right";
+};
+
 export type RegisterLayerOptions = {
   camera: Camera2D;
   sort?: LayerSortMode;
 };
 
+type Layer = { camera: Camera2D; sort: LayerSortMode; rank: number };
+
+const WHITE: Color = { r: 1, g: 1, b: 1, a: 1 };
+
 export class Graphics {
-  private readonly layers = new LayerRegistry();
-  private readonly queue = new DrawQueue();
-  private currentLayer: string | null = null;
+  private readonly layers = new Map<string, Layer>();
+  private readonly names: string[] = [];
+  private readonly cameras: Camera2D[] = [];
+  private readonly queue = new RenderQueue();
   private readonly textAtlases = new Map<string, GlyphAtlas>();
+  private current: Layer | null = null;
+  private clearColor: Color = { r: 0, g: 0, b: 0, a: 1 };
 
   constructor(readonly renderer: FrameRenderer) {}
 
-  drawText(
-    text: string,
-    x: number,
-    y: number,
-    options: TextDrawOptions = {},
-  ): void {
-    const styleKey = `${options.font ?? DEFAULT_TEXT_STYLE.font}|${options.sizePx ?? DEFAULT_TEXT_STYLE.sizePx}`;
-    let atlas = this.textAtlases.get(styleKey);
-    if (!atlas) {
-      atlas = new GlyphAtlas(
-        (pixels, w, h) => this.uploadRgba(pixels, w, h),
-        createCanvasRasterizer(),
-        { font: options.font, sizePx: options.sizePx },
-      );
-      this.textAtlases.set(styleKey, atlas);
-    }
+  drawText(text: string, x: number, y: number, options: TextDrawOptions = {}): void {
+    const atlas = this.getAtlas(options);
     const layout = atlas.layout(text);
     const scale = options.scale ?? 1;
     const align = options.align ?? "left";
-    const originX = align === "center" ? layout.width * scale * 0.5 : align === "right" ? layout.width * scale : 0;
+    const originX =
+      align === "center" ? layout.width * scale * 0.5 : align === "right" ? layout.width * scale : 0;
     for (const glyph of layout.frames) {
       this.drawSprite(glyph.frame, {
         x: x + glyph.x * scale - originX,
@@ -63,21 +75,15 @@ export class Graphics {
   }
 
   measureText(text: string, style: TextStyle = {}): number {
-    const styleKey = `${style.font ?? DEFAULT_TEXT_STYLE.font}|${style.sizePx ?? DEFAULT_TEXT_STYLE.sizePx}`;
-    let atlas = this.textAtlases.get(styleKey);
-    if (!atlas) {
-      atlas = new GlyphAtlas(
-        (pixels, w, h) => this.uploadRgba(pixels, w, h),
-        createCanvasRasterizer(),
-        style,
-      );
-      this.textAtlases.set(styleKey, atlas);
-    }
-    return atlas.measure(text);
+    return this.getAtlas(style).measure(text);
   }
 
   registerLayer(name: string, options: RegisterLayerOptions): void {
-    this.layers.register(name, { camera: options.camera, sort: options.sort ?? "z" });
+    if (this.layers.has(name)) throw new Error(`Layer "${name}" is already registered.`);
+    const layer: Layer = { camera: options.camera, sort: options.sort ?? "z", rank: this.names.length };
+    this.layers.set(name, layer);
+    this.names.push(name);
+    this.cameras.push(options.camera);
   }
 
   resize(width: number, height: number): void {
@@ -85,18 +91,17 @@ export class Graphics {
   }
 
   beginFrame(clearColor: Color): void {
-    this.queue.clear();
-    this.currentLayer = null;
-    this.renderer.beginFrame(clearColor);
+    this.clearColor = clearColor;
+    this.queue.reset();
+    this.current = null;
   }
 
   beginLayer(name: string): void {
-    this.layers.get(name);
-    this.currentLayer = name;
+    this.current = this.layer(name);
   }
 
   endLayer(): void {
-    this.currentLayer = null;
+    this.current = null;
   }
 
   uploadRgba(data: Uint8Array, width: number, height: number): TextureHandle {
@@ -108,15 +113,30 @@ export class Graphics {
   }
 
   drawSprite(frame: SpriteFrame, opts: DrawOptions): void {
-    const layerName = this.requireLayer("drawSprite");
-    const layer = this.layers.get(layerName);
-    this.renderer.prepareSprite(frame.texture);
-    this.queue.push({
-      kind: "sprite",
-      layer: layerName,
-      frame,
-      opts: resolveDrawOptions(frame, opts, layer.sort),
-    });
+    const layer = this.requireLayer("drawSprite");
+    const tint = opts.tint ?? WHITE;
+    this.queue.pushSprite(
+      opts.x,
+      opts.y,
+      opts.z ?? (layer.sort === "y" ? opts.y + frame.height : opts.y),
+      opts.rotation ?? 0,
+      (opts.scale?.x ?? 1) * (opts.flipX ? -1 : 1),
+      (opts.scale?.y ?? 1) * (opts.flipY ? -1 : 1),
+      opts.origin?.x ?? frame.width * 0.5,
+      opts.origin?.y ?? frame.height * 0.5,
+      frame.u0,
+      frame.v0,
+      frame.u1,
+      frame.v1,
+      frame.width,
+      frame.height,
+      frame.texture.id,
+      tint.r,
+      tint.g,
+      tint.b,
+      tint.a,
+      layer.rank,
+    );
   }
 
   drawRect(
@@ -127,18 +147,22 @@ export class Graphics {
     color: Color,
     options: ShapeOptions = {},
   ): void {
-    const layerName = this.requireLayer("drawRect");
-    const layer = this.layers.get(layerName);
-    this.queue.push({
-      kind: "shapeRect",
-      layer: layerName,
-      z: resolveShapeZ(y, height, layer.sort, options.z),
-      x,
-      y,
-      width,
-      height,
-      color,
-    });
+    const layer = this.requireLayer("drawRect");
+    this.queue.pushShape(
+      DRAW_BOX,
+      x + width * 0.5,
+      y + height * 0.5,
+      0,
+      0,
+      width * 0.5,
+      height * 0.5,
+      shapeZ(layer.sort, options.z, y, height),
+      color.r,
+      color.g,
+      color.b,
+      color.a,
+      layer.rank,
+    );
   }
 
   drawCircle(
@@ -148,18 +172,22 @@ export class Graphics {
     color: Color,
     options: ShapeOptions & { segments?: number } = {},
   ): void {
-    const layerName = this.requireLayer("drawCircle");
-    const layer = this.layers.get(layerName);
-    this.queue.push({
-      kind: "shapeCircle",
-      layer: layerName,
-      z: resolveShapeZ(cy, radius * 2, layer.sort, options.z),
-      x: cx,
-      y: cy,
+    const layer = this.requireLayer("drawCircle");
+    this.queue.pushShape(
+      DRAW_CIRCLE,
+      cx,
+      cy,
       radius,
-      color,
-      segments: options.segments ?? 32,
-    });
+      radius,
+      radius,
+      0,
+      shapeZ(layer.sort, options.z, cy, radius * 2),
+      color.r,
+      color.g,
+      color.b,
+      color.a,
+      layer.rank,
+    );
   }
 
   drawLine(
@@ -171,58 +199,78 @@ export class Graphics {
     color: Color,
     options: ShapeOptions = {},
   ): void {
-    const layerName = this.requireLayer("drawLine");
-    const layer = this.layers.get(layerName);
-    this.queue.push({
-      kind: "shapeLine",
-      layer: layerName,
-      z: resolveShapeZ(Math.max(y0, y1), width, layer.sort, options.z),
+    const layer = this.requireLayer("drawLine");
+    this.queue.pushShape(
+      DRAW_CAPSULE,
       x0,
       y0,
       x1,
       y1,
-      width,
-      color,
-    });
+      width * 0.5,
+      0,
+      shapeZ(layer.sort, options.z, Math.max(y0, y1), width),
+      color.r,
+      color.g,
+      color.b,
+      color.a,
+      layer.rank,
+    );
   }
 
   endFrame(): void {
-    this.renderer.endFrame(this.layers.drawOrder, this.queue.byLayer(this.layers.drawOrder), (name) =>
-      this.layers.get(name),
-    );
+    const { width, height } = this.renderer.viewport;
+    this.queue.finalize();
+    this.renderer.render(width, height, this.clearColor, this.cameras, this.queue);
   }
 
   get viewport(): { width: number; height: number } {
     return this.renderer.viewport;
   }
 
+  get stats() {
+    return this.renderer.stats;
+  }
+
   get layerOrder(): readonly string[] {
-    return this.layers.drawOrder;
+    return this.names;
   }
 
   getLayerSortMode(name: string): LayerSortMode {
-    return this.layers.get(name).sort;
+    return this.layer(name).sort;
   }
 
-  private requireLayer(caller: string): string {
-    if (!this.currentLayer) {
-      throw new Error(`${caller}() called outside of beginLayer()/endLayer().`);
-    }
-    return this.currentLayer;
+  private layer(name: string): Layer {
+    const layer = this.layers.get(name);
+    if (!layer) throw new Error(`Layer "${name}" is not registered. Call registerLayer() first.`);
+    return layer;
   }
+
+  private requireLayer(caller: string): Layer {
+    if (!this.current) throw new Error(`${caller}() called outside of beginLayer()/endLayer().`);
+    return this.current;
+  }
+
+  private getAtlas(style: TextStyle): GlyphAtlas {
+    const key = `${style.font ?? DEFAULT_TEXT_STYLE.font}|${style.sizePx ?? DEFAULT_TEXT_STYLE.sizePx}`;
+    let atlas = this.textAtlases.get(key);
+    if (!atlas) {
+      atlas = new GlyphAtlas(
+        (pixels, w, h) => this.uploadRgba(pixels, w, h),
+        createCanvasRasterizer(),
+        style,
+      );
+      this.textAtlases.set(key, atlas);
+    }
+    return atlas;
+  }
+}
+
+function shapeZ(sort: LayerSortMode, z: number | undefined, y: number, extent: number): number {
+  if (z !== undefined) return z;
+  return sort === "y" ? y + extent : y;
 }
 
 export { Camera2D, createUiCamera, createWorldCamera } from "./Camera2D.js";
 export { Color } from "../math/index.js";
-export type { LayerSortMode } from "./LayerRegistry.js";
-export type { ShapeOptions } from "./DrawQueue.js";
 export { GlyphAtlas, DEFAULT_TEXT_STYLE, createCanvasRasterizer } from "./text/GlyphAtlas.js";
 export type { TextStyle, RasterizedGlyph, GlyphRasterizer, TextLayoutLine } from "./text/GlyphAtlas.js";
-
-export type TextDrawOptions = TextStyle & {
-  z?: number;
-  color?: Color;
-  scale?: number;
-  scaleY?: number;
-  align?: "left" | "center" | "right";
-};

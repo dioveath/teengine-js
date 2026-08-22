@@ -140,6 +140,18 @@ export const Mat3 = {
     return Mat3.multiply(out, m, s);
   },
 
+  writeUniform(m: Mat3, out: Float32Array, offset: number): void {
+    out[offset] = m[0];
+    out[offset + 1] = m[1];
+    out[offset + 2] = m[2];
+    out[offset + 4] = m[3];
+    out[offset + 5] = m[4];
+    out[offset + 6] = m[5];
+    out[offset + 8] = m[6];
+    out[offset + 9] = m[7];
+    out[offset + 10] = m[8];
+  },
+
   transformPoint(out: { x: number; y: number }, m: Mat3, x: number, y: number) {
     out.x = m[0] * x + m[3] * y + m[6];
     out.y = m[1] * x + m[4] * y + m[7];

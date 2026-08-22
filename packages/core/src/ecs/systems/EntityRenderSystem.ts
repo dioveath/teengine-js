@@ -1,12 +1,7 @@
 import type { Graphics } from "../../graphics/Graphics.js";
-import { sortEntitiesForLayer, type World } from "../World.js";
+import { sortEntitiesForLayer, type LayerBucket, type World } from "../World.js";
 import type { Entity } from "../Entity.js";
 import type { RenderSystem, RenderSystemContext } from "../System.js";
-
-type LayerBucket = {
-  sprites: Entity[];
-  shapes: Entity[];
-};
 
 export function renderWorldEntities(
   world: World,

@@ -44,7 +44,7 @@ export type SpaceInvadersSceneContext = {
 
 declare global {
   interface Window {
-    __TE__?: { snapshot: () => Record<string, unknown> };
+    __TE__?: { snapshot: () => Record<string, unknown>; stats: () => unknown };
   }
 }
 
@@ -128,7 +128,7 @@ export function createSpaceInvadersScene(engine: Engine, atlas: SpaceInvadersAtl
 
   world.inspector.set("state", () => state);
   world.inspector.set("playerX", () => world.get(playerId)?.transform.x ?? 0);
-  window.__TE__ = { snapshot: () => world.inspector.snapshot() };
+  window.__TE__ = { snapshot: () => world.inspector.snapshot(), stats: () => engine.graphics.stats };
 
   return { engine, world, atlas, state, playerId, worldCamera: worldCam, uiCamera: uiCam };
 }

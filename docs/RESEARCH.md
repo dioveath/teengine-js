@@ -36,3 +36,19 @@ Sources reviewed and the upgrades they motivated. All additions are genre-neutra
 
 - `packages/core`: 54 vitest cases covering EventBus semantics (ordering, once, re-entrancy), SpatialGrid queries/packing, Pool reuse, Rng determinism/bounds, Tween lifecycle, GlyphAtlas packing/growth/fallback, plus pre-existing suites.
 - `bun run typecheck` across all workspace packages; `bun run build`; physics suite green.
+
+## Rendering pipeline rebuild (sources → upgrades)
+
+6. Jones, *WebGPU Best Practices* (toji.dev) — buffer uploads, bind groups, compute vertex data, render bundles.
+7. O'Donnell, *FrameGraph: Extensible Rendering Architecture in Frostbite* (GDC 2017); Arntzen, *Render graphs and Vulkan — a deep dive* — pass/resource separation, transient ownership.
+8. PixiJS v8 `Batcher` / `GpuBatchAdaptor` source — instruction-set batching, pooled batch records, multi-texture batches, blend/topology batch breaks.
+9. Quilez, *2D distance functions* — analytic SDF shapes with screen-space anti-aliasing.
+
+| Principle | Source | Upgrade |
+|---|---|---|
+| Frequency-layered resources | toji bind-groups | per-view uniform bind groups; texture set per batch |
+| Multi-texture batching | PixiJS v8 | up to 8 textures per draw via `binding_array`, flush only on overflow/view change |
+| Instanced quads | toji compute-vertex-data era practice | `draw(4, n)` triangle-strip instances replace 6-vertex CPU-expanded quads |
+| Zero-alloc draw list | Fabian/GPP | SoA `RenderQueue`, preallocated merge sort, pooled scratch |
+| Ring buffer uploads | toji buffer-uploads | single growable GPUBuffer, 256-aligned regions, one `writeBuffer` per region |
+| SDF shapes | Quilez | box/circle/capsule in fragment shader, `fwidth` AA, CPU tessellation deleted |

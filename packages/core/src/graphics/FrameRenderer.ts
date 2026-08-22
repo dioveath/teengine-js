@@ -1,21 +1,24 @@
 import type { Color } from "../math/index.js";
-import type { DrawCommand } from "./DrawQueue.js";
-import type { LayerConfig } from "./LayerRegistry.js";
+import type { Camera2D } from "./Camera2D.js";
+import type { RenderQueue, RenderStats } from "./RenderQueue.js";
 import type { TextureHandle } from "./sprite.js";
+
+export type { RenderStats };
 
 export interface FrameRenderer {
   readonly canvas: HTMLCanvasElement;
   readonly viewport: { width: number; height: number };
+  readonly stats: RenderStats;
   resizeToDisplaySize(): { width: number; height: number };
   resize(width: number, height: number): void;
-  beginFrame(clearColor: Color): void;
-  endFrame(
-    layerOrder: readonly string[],
-    grouped: Map<string, DrawCommand[]>,
-    getLayer: (name: string) => LayerConfig,
+  render(
+    width: number,
+    height: number,
+    clearColor: Color,
+    cameras: readonly Camera2D[],
+    queue: RenderQueue,
   ): void;
   uploadRgba(data: Uint8Array, width: number, height: number): TextureHandle;
   uploadImage(bitmap: ImageBitmap): TextureHandle;
-  prepareSprite(handle: TextureHandle): void;
   dispose(): void;
 }
