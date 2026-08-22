@@ -5,6 +5,8 @@ export type SfxOptions = {
   duration?: number;
   volume?: number;
   delay?: number;
+  /** Absolute AudioContext time; overrides `delay` (used by sequencers). */
+  at?: number;
 };
 
 export class AudioSystem {
@@ -36,7 +38,7 @@ export class AudioSystem {
     const r = this.ready();
     if (!r) return;
     const { ctx, master } = r;
-    const t0 = ctx.currentTime + (options.delay ?? 0);
+    const t0 = options.at ?? ctx.currentTime + (options.delay ?? 0);
     const duration = options.duration ?? 0.08;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -102,6 +104,10 @@ export class AudioSystem {
 
   get isMuted(): boolean {
     return this.muted;
+  }
+
+  get now(): number | null {
+    return this.ctx && this.ctx.state === "running" && !this.muted ? this.ctx.currentTime : null;
   }
 
   destroy(): void {

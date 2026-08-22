@@ -48,6 +48,16 @@ export class GpuCache {
     return this.textures.has(id);
   }
 
+  disposeTexture(id: number): void {
+    const entry = this.textures.get(id);
+    if (!entry) return;
+    entry.texture.destroy();
+    this.textures.delete(id);
+    for (const key of [...this.bindGroups.keys()]) {
+      if (key.split(",").includes(String(id))) this.bindGroups.delete(key);
+    }
+  }
+
   bindGroup(ids: readonly number[]): GPUBindGroup {
     const key = ids.join(",");
     let group = this.bindGroups.get(key);

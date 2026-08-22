@@ -26,6 +26,7 @@ export default defineConfig({
         main: resolve(root, "index.html"),
         platformer: resolve(root, "platformer.html"),
         spaceInvaders: resolve(root, "space-invaders.html"),
+        pokemon: resolve(root, "pokemon.html"),
         bench: resolve(root, "bench.html"),
       },
     },

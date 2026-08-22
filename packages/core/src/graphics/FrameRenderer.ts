@@ -20,5 +20,6 @@ export interface FrameRenderer {
   ): void;
   uploadRgba(data: Uint8Array, width: number, height: number): TextureHandle;
   uploadImage(bitmap: ImageBitmap): TextureHandle;
+  disposeTexture(handle: TextureHandle): void;
   dispose(): void;
 }

@@ -74,6 +74,10 @@ export class Canvas2DRenderer implements FrameRenderer {
     return this.store(canvas, ctx, bitmap.width, bitmap.height);
   }
 
+  disposeTexture(handle: TextureHandle): void {
+    this.textures.delete(handle.id);
+  }
+
   render(
     _width: number,
     _height: number,

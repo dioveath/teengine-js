@@ -112,6 +112,10 @@ export class Graphics {
     return this.renderer.uploadImage(bitmap);
   }
 
+  disposeTexture(handle: TextureHandle): void {
+    this.renderer.disposeTexture(handle);
+  }
+
   drawSprite(frame: SpriteFrame, opts: DrawOptions): void {
     const layer = this.requireLayer("drawSprite");
     const tint = opts.tint ?? WHITE;
@@ -256,6 +260,7 @@ export class Graphics {
     if (!atlas) {
       atlas = new GlyphAtlas(
         (pixels, w, h) => this.uploadRgba(pixels, w, h),
+        (handle) => this.disposeTexture(handle),
         createCanvasRasterizer(),
         style,
       );

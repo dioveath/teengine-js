@@ -14,6 +14,7 @@ describe("GlyphAtlas", () => {
         uploadCalls++;
         return { id: ++handleId };
       },
+      () => {},
       (char) => ({
         pixels: char === " " ? null : new Uint8Array(10 * 14 * 4).fill(255),
         cellWidth: 10,
@@ -21,17 +22,22 @@ describe("GlyphAtlas", () => {
         advance: char === "i" ? 3 : char === " " ? 4 : 8,
       }),
     );
+    const uploadsAfterPreload = uploadCalls;
+    const handlesAfterPreload = handleId;
+    const glyphsAfterPreload = atlas.glyphCount;
+    expect(uploadsAfterPreload).toBeGreaterThan(0);
     const layout = atlas.layout("hi i");
-    expect(uploadCalls).toBe(2);
-    expect(handleId).toBe(2);
+    expect(uploadCalls).toBe(uploadsAfterPreload);
+    expect(handleId).toBe(handlesAfterPreload);
+    expect(atlas.glyphCount).toBe(glyphsAfterPreload);
     expect(layout.frames.length).toBe(3);
     expect(layout.width).toBe(8 + 3 + 4 + 3);
     expect(atlas.measure("hi i")).toBe(layout.width);
-    expect(atlas.glyphCount).toBe(3);
+    expect(atlas.glyphCount).toBe(glyphsAfterPreload);
 
     const again = atlas.layout("hi i");
     expect(again.frames.map((f) => f.x)).toEqual(layout.frames.map((f) => f.x));
-    expect(handleId).toBe(2);
+    expect(uploadCalls).toBe(uploadsAfterPreload);
   });
 
   it("grows the atlas when it fills up and keeps frames valid", () => {
@@ -42,20 +48,22 @@ describe("GlyphAtlas", () => {
         uploadedSides.push(w);
         return { id: ++handleId };
       },
+      () => {},
       () => ({
-        pixels: new Uint8Array(20 * 20 * 4).fill(200),
+        pixels: new Uint8Array(20 * 32 * 4).fill(200),
         cellWidth: 20,
-        cellHeight: 20,
+        cellHeight: 32,
         advance: 10,
       }),
     );
-    const chars = Array.from({ length: 200 }, (_, i) =>
+    uploadedSides.length = 0;
+    const chars = Array.from({ length: 500 }, (_, i) =>
       String.fromCharCode(0x4e00 + i),
     );
     for (const ch of chars) atlas.measure(ch);
-    expect(atlas.atlasSize).toBeGreaterThan(256);
-    expect(new Set(uploadedSides)).toEqual(new Set([256, 512]));
+    expect(atlas.atlasSize).toBeGreaterThan(512);
     expect(uploadedSides[uploadedSides.length - 1]).toBe(atlas.atlasSize);
+    expect([...uploadedSides].sort((a, b) => a - b)).toEqual([...uploadedSides]);
     for (const ch of chars.slice(0, 10)) {
       const layout = atlas.layout(ch);
       expect(layout.frames.length).toBe(1);
@@ -65,7 +73,7 @@ describe("GlyphAtlas", () => {
   });
 
   it("falls back to blank advance without a rasterizer", () => {
-    const atlas = new GlyphAtlas(() => ({ id: 1 }), null);
+    const atlas = new GlyphAtlas(() => ({ id: 1 }), () => {}, null);
     expect(atlas.measure("abc")).toBeCloseTo(DEFAULT_TEXT_STYLE.sizePx * 0.28 * 3);
     expect(atlas.glyphCount).toBe(0);
   });

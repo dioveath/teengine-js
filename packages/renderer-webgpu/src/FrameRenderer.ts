@@ -100,6 +100,10 @@ export class WebGpuFrameRenderer implements FrameRenderer {
     return { id: this.cache.uploadRgba(data, width, height) };
   }
 
+  disposeTexture(handle: TextureHandle): void {
+    this.cache.disposeTexture(handle.id);
+  }
+
   uploadImage(bitmap: ImageBitmap): TextureHandle {
     return { id: this.cache.uploadImage(bitmap) };
   }

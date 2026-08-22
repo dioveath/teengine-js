@@ -45,6 +45,8 @@ export class HeadlessRenderer implements FrameRenderer {
     return { id: this.track() };
   }
 
+  disposeTexture(): void {}
+
   uploadImage(): TextureHandle {
     return { id: this.track() };
   }

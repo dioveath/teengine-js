@@ -343,6 +343,35 @@
         background: linear-gradient(180deg, #1a2744 0%, #0d1117 70%, #2d3f5c 70%, #1e2a3d 100%);
       }
 
+      .cover-velmora {
+        background: linear-gradient(180deg, #16321f 0%, #0d1117 68%, #24402b 68%, #16281c 100%);
+      }
+
+      .velmora-ball {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 44px;
+        height: 44px;
+        transform: translate(-50%, -55%);
+        border-radius: 50%;
+        background: linear-gradient(180deg, #e0554f 0%, #e0554f 46%, #22262e 46%, #22262e 54%, #f2f2ef 54%);
+        box-shadow: inset -6px -8px 12px rgba(0, 0, 0, 0.35), 0 6px 18px rgba(0, 0, 0, 0.5);
+      }
+
+      .velmora-ball::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 14px;
+        height: 14px;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        background: #f2f2ef;
+        border: 3px solid #22262e;
+      }
+
       .cover-platformer::after {
         content: "";
         position: absolute;
@@ -565,10 +594,31 @@
 
       <div class="section-head">
         <h3>Demo library</h3>
-        <span id="count">2 titles</span>
+        <span id="count">3 titles</span>
       </div>
 
       <div class="library" id="library">
+        <a
+          class="game-card"
+          href="pokemon.html"
+          data-title="pokemon velmora rpg monster catching"
+          data-tags="rpg adventure"
+        >
+          <div class="cover cover-velmora"><div class="velmora-ball"></div></div>
+          <div class="card-body">
+            <h4>Pokémon Velmora</h4>
+            <p>A monster-taming RPG — explore Emberpine Village, catch 1000+ monsters, battle trainers, and earn the Terra Badge.</p>
+            <div class="card-tags">
+              <span class="tag">RPG</span>
+              <span class="tag">Adventure</span>
+            </div>
+            <div class="card-actions">
+              <span class="btn-play btn-play-sm">Play</span>
+              <span class="price-free">Free</span>
+            </div>
+          </div>
+        </a>
+
         <a
           class="game-card"
           href="space-invaders.html"

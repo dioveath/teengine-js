@@ -11,7 +11,11 @@ export const DEFAULT_TEXT_STYLE = {
 } as const;
 
 const GLYPH_PAD = 2;
-const INITIAL_ATLAS_SIDE = 256;
+const INITIAL_ATLAS_SIDE = 512;
+
+/** Common glyphs rasterized in a single bulk pass at construction. */
+export const PRELOAD_CHARS =
+  " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~▼▶₽é’…";
 
 export type RasterizedGlyph = {
   pixels: Uint8Array | null;
@@ -44,6 +48,7 @@ export class GlyphAtlas {
 
   constructor(
     private readonly upload: (pixels: Uint8Array, w: number, h: number) => TextureHandle,
+    private readonly dispose: (handle: TextureHandle) => void,
     private readonly rasterize: GlyphRasterizer | null,
     style: TextStyle = {},
   ) {
@@ -53,6 +58,7 @@ export class GlyphAtlas {
     };
     this.side = INITIAL_ATLAS_SIDE;
     this.pixels = new Uint8Array(this.side * this.side * 4);
+    if (this.rasterize) this.layout(PRELOAD_CHARS);
   }
 
   get glyphCount(): number {
@@ -114,7 +120,9 @@ export class GlyphAtlas {
   }
 
   private flush(): void {
+    const previous = this.texture;
     this.texture = this.upload(this.pixels, this.side, this.side);
+    if (previous) this.dispose(previous);
     for (const g of this.cache.values()) {
       if (g.frame) (g.frame as { texture: TextureHandle }).texture = this.texture;
     }
