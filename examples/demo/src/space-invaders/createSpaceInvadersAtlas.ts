@@ -1,15 +1,17 @@
-import type { AtlasRegion } from "teengine";
+import type { Graphics, SpriteFrame } from "teengine";
 import { CELL, createTextureFromRgba, regionAt, setPixel } from "../shared/atlasUtils.js";
 
+export const SI_ATLAS = "si";
+
 export type SpaceInvadersAtlas = {
-  player: AtlasRegion;
-  invaderA: AtlasRegion;
-  invaderAAlt: AtlasRegion;
-  invaderB: AtlasRegion;
-  invaderBAlt: AtlasRegion;
-  bullet: AtlasRegion;
-  enemyBullet: AtlasRegion;
-  uiHeart: AtlasRegion;
+  player: SpriteFrame;
+  invaderA: SpriteFrame;
+  invaderAAlt: SpriteFrame;
+  invaderB: SpriteFrame;
+  invaderBAlt: SpriteFrame;
+  bullet: SpriteFrame;
+  enemyBullet: SpriteFrame;
+  uiHeart: SpriteFrame;
 };
 
 const COLS = 4;
@@ -118,7 +120,7 @@ function cellOrigin(col: number, row: number, w: number, h: number): { x: number
   };
 }
 
-export function createSpaceInvadersAtlas(device: GPUDevice): SpaceInvadersAtlas {
+export function createSpaceInvadersAtlas(graphics: Graphics): SpaceInvadersAtlas {
   const pixels = new Uint8ClampedArray(ATLAS_W * CELL * ROWS * 4);
   const cyan: [number, number, number] = [0xb8, 0xff, 0xf0];
   const orange: [number, number, number] = [0xf7, 0x81, 0x66];
@@ -157,9 +159,9 @@ export function createSpaceInvadersAtlas(device: GPUDevice): SpaceInvadersAtlas 
     setPixel(pixels, ATLAS_W, enemyBolt.x + zigzag + 1, enemyBolt.y + y, rose[0], rose[1], rose[2]);
   }
 
-  const texture = createTextureFromRgba(device, pixels, ATLAS_W, CELL * ROWS);
+  const texture = createTextureFromRgba(graphics, pixels, ATLAS_W, CELL * ROWS);
   const pack = (box: { x: number; y: number; w: number; h: number }) =>
-    regionAt(texture, box.x, box.y, box.w, box.h);
+    regionAt(texture, ATLAS_W, CELL * ROWS, box.x, box.y, box.w, box.h);
 
   return {
     player: pack(ship),

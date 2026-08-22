@@ -1,50 +1,37 @@
-import type { AtlasRegion, GpuTexture } from "teengine";
+import type { Graphics, SpriteFrame, TextureHandle } from "teengine";
+import { spriteFrame } from "teengine";
 
 export const CELL = 32;
 
 export function createTextureFromRgba(
-  device: GPUDevice,
+  graphics: Graphics,
   pixels: Uint8ClampedArray,
   width: number,
   height: number,
-): GpuTexture {
-  const data = new Uint8Array(pixels);
-  const texture = device.createTexture({
-    size: { width, height },
-    format: "rgba8unorm",
-    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
-  });
-  device.queue.writeTexture(
-    { texture },
-    data,
-    { bytesPerRow: width * 4 },
-    { width, height },
-  );
-  const view = texture.createView();
-  const sampler = device.createSampler({ magFilter: "nearest", minFilter: "nearest" });
-  return { texture, view, sampler, width, height };
+): TextureHandle {
+  return graphics.uploadRgba(new Uint8Array(pixels), width, height);
 }
 
 export function regionAt(
-  texture: GpuTexture,
+  texture: TextureHandle,
+  texW: number,
+  texH: number,
   x: number,
   y: number,
   w: number,
   h: number,
-): AtlasRegion {
-  return {
-    texture,
-    u0: x / texture.width,
-    v0: y / texture.height,
-    u1: (x + w) / texture.width,
-    v1: (y + h) / texture.height,
-    width: w,
-    height: h,
-  };
+): SpriteFrame {
+  return spriteFrame(texture, texW, texH, x, y, w, h);
 }
 
-export function regionFromCell(texture: GpuTexture, col: number, row: number): AtlasRegion {
-  return regionAt(texture, col * CELL, row * CELL, CELL, CELL);
+export function regionFromCell(
+  texture: TextureHandle,
+  texW: number,
+  texH: number,
+  col: number,
+  row: number,
+): SpriteFrame {
+  return regionAt(texture, texW, texH, col * CELL, row * CELL, CELL, CELL);
 }
 
 export function setPixel(

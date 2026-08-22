@@ -9,7 +9,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "teengine": "file:../../packages/teengine"
+    "teengine": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

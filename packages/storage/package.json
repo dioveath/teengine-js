@@ -1,0 +1,22 @@
+{
+  "name": "@teengine/storage",
+  "version": "0.4.0",
+  "description": "Project document storage adapters for TeEngine.",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@teengine/core": "workspace:*"
+  }
+}

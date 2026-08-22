@@ -1,5 +1,4 @@
 import type { FixedSystem, FixedSystemContext, World } from "teengine";
-import type { SpaceInvadersAtlas } from "./createSpaceInvadersAtlas.js";
 import {
   FORMATION_MARGIN,
   FORMATION_STEP_DOWN,
@@ -16,10 +15,7 @@ import {
 export class InvaderFormationSystem implements FixedSystem {
   readonly name = "InvaderFormationSystem";
 
-  constructor(
-    private readonly state: SpaceInvadersState,
-    private readonly atlas: SpaceInvadersAtlas,
-  ) {}
+  constructor(private readonly state: SpaceInvadersState) {}
 
   fixedUpdate(ctx: FixedSystemContext): void {
     const { world, dt } = ctx;
@@ -70,7 +66,7 @@ export class InvaderFormationSystem implements FixedSystem {
       const invader = world.get(id);
       if (!invader?.sprite) continue;
       const kind = this.state.invaderKinds.get(id) ?? "B";
-      invader.sprite.region = invaderRegion(this.atlas, kind, this.state.invaderAnimFrame);
+      invader.sprite.region = invaderRegion(kind, this.state.invaderAnimFrame);
     }
   }
 }

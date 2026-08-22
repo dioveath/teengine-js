@@ -1,4 +1,4 @@
-import { Engine } from "teengine";
+import { createEngine } from "teengine";
 import { createSpaceInvadersAtlas } from "./createSpaceInvadersAtlas.js";
 import { bindSpaceInvadersLoop, createSpaceInvadersScene } from "./SpaceInvadersScene.js";
 
@@ -11,9 +11,8 @@ async function main(): Promise<void> {
   const fallback = document.getElementById("fallback");
 
   try {
-    const engine = await Engine.create({ canvas });
-    const atlas = createSpaceInvadersAtlas(engine.device);
-
+    const engine = await createEngine({ canvas });
+    const atlas = createSpaceInvadersAtlas(engine.graphics);
     const scene = createSpaceInvadersScene(engine, atlas);
     bindSpaceInvadersLoop(scene);
     engine.start();

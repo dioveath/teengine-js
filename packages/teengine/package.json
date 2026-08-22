@@ -1,7 +1,7 @@
 {
   "name": "teengine",
-  "version": "0.3.0",
-  "description": "Simple 2D TypeScript game engine powered by WebGPU",
+  "version": "0.4.0",
+  "description": "2D TypeScript game engine — WebGPU, ECS, optional Rapier.",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -15,32 +15,17 @@
       "import": "./dist/index.js"
     }
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "sideEffects": false,
   "scripts": {
     "build": "tsup",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@dimforge/rapier2d": "^0.19.3"
+    "@teengine/core": "workspace:*",
+    "@teengine/physics": "workspace:*",
+    "@teengine/renderer-webgpu": "workspace:*",
+    "@teengine/renderer-canvas2d": "workspace:*"
   },
-  "devDependencies": {
-    "@webgpu/types": "^0.1.60",
-    "happy-dom": "^17.4.4",
-    "tsup": "^8.5.0",
-    "typescript": "^5.8.3",
-    "vite-plugin-top-level-await": "^1.6.0",
-    "vite-plugin-wasm": "^3.6.0",
-    "vitest": "^3.2.4"
-  },
-  "keywords": [
-    "game-engine",
-    "webgpu",
-    "2d",
-    "typescript",
-    "rapier"
-  ]
+  "keywords": ["game-engine", "webgpu", "2d", "typescript", "rapier"]
 }

@@ -7,6 +7,10 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   target: "es2022",
-  outDir: "dist",
-  external: ["@dimforge/rapier2d"],
+  external: [
+    "@teengine/core",
+    "@teengine/physics",
+    "@teengine/renderer-webgpu",
+    "@teengine/renderer-canvas2d",
+  ],
 });

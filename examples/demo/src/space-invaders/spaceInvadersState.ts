@@ -1,5 +1,4 @@
-import type { AtlasRegion, EntityId } from "teengine";
-import type { SpaceInvadersAtlas } from "./createSpaceInvadersAtlas.js";
+import type { EntityId, World } from "teengine";
 
 export const WORLD_W = 800;
 export const WORLD_H = 600;
@@ -67,11 +66,15 @@ export function createSpaceInvadersState(): SpaceInvadersState {
   };
 }
 
-export function invaderRegion(atlas: SpaceInvadersAtlas, kind: InvaderKind, frame: 0 | 1): AtlasRegion {
-  if (kind === "A") {
-    return frame === 0 ? atlas.invaderA : atlas.invaderAAlt;
-  }
-  return frame === 0 ? atlas.invaderB : atlas.invaderBAlt;
+export function invaderRegion(kind: InvaderKind, frame: 0 | 1): string {
+  if (kind === "A") return frame === 0 ? "invaderA" : "invaderAAlt";
+  return frame === 0 ? "invaderB" : "invaderBAlt";
+}
+
+export function spriteSize(world: World, entity: { sprite?: { asset: string; region: string } }, fw: number, fh: number): { w: number; h: number } {
+  if (!entity.sprite) return { w: fw, h: fh };
+  const frame = world.assets.frame(entity.sprite.asset, entity.sprite.region);
+  return { w: frame.width, h: frame.height };
 }
 
 export function invaderPoints(kind: InvaderKind): number {

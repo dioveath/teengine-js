@@ -20,18 +20,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: 22
-          cache: npm
+          bun-version: 1.3.14
 
-      - run: npm ci
+      - run: bun install --frozen-lockfile
 
       - name: Build demo for GitHub Pages
         env:
-          # Project site URL: https://<user>.github.io/<repo>/
           VITE_BASE: /${{ github.event.repository.name }}/
-        run: npm run build:demo
+        run: bun run build:demo
 
       - uses: actions/upload-pages-artifact@v3
         with:

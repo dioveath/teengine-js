@@ -1,0 +1,22 @@
+{
+  "name": "@teengine/gen",
+  "version": "0.4.0",
+  "description": "Host-overridable generation contracts for TeEngine.",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.24.2"
+  }
+}

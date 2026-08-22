@@ -1,4 +1,5 @@
 import type { SpaceInvadersAtlas } from "./createSpaceInvadersAtlas.js";
+import { SI_ATLAS } from "./createSpaceInvadersAtlas.js";
 import {
   Color,
   Layers,
@@ -43,11 +44,15 @@ export type SpaceInvadersSceneContext = {
 
 declare global {
   interface Window {
-    __TE_SI__?: { state: SpaceInvadersState; playerX: () => number };
+    __TE__?: { snapshot: () => Record<string, unknown> };
   }
 }
 
-function spawnInvaders(world: World, atlas: SpaceInvadersAtlas, state: SpaceInvadersState): void {
+function sprite(region: string, layer: string, origin?: { x: number; y: number }) {
+  return { asset: SI_ATLAS, region, layer, origin };
+}
+
+function spawnInvaders(world: World, state: SpaceInvadersState): void {
   for (let row = 0; row < INVADER_ROWS; row++) {
     const kind: InvaderKind = row < 2 ? "A" : "B";
     for (let col = 0; col < INVADER_COLS; col++) {
@@ -57,10 +62,7 @@ function spawnInvaders(world: World, atlas: SpaceInvadersAtlas, state: SpaceInva
           x: INVADER_START_X + col * INVADER_PAD_X,
           y: INVADER_START_Y + row * INVADER_PAD_Y,
         },
-        sprite: {
-          region: invaderRegion(atlas, kind, 0),
-          layer: Layers.world,
-        },
+        sprite: sprite(invaderRegion(kind, 0), Layers.world),
       });
       state.invaderIds.push(id);
       state.invaderKinds.set(id, kind);
@@ -68,12 +70,12 @@ function spawnInvaders(world: World, atlas: SpaceInvadersAtlas, state: SpaceInva
   }
 }
 
-function spawnHudHearts(world: World, atlas: SpaceInvadersAtlas, state: SpaceInvadersState): void {
+function spawnHudHearts(world: World, state: SpaceInvadersState): void {
   for (let i = 0; i < state.lives; i++) {
     const heartId = world.spawn({
       name: `Life-${i}`,
       transform: { x: 24 + i * 36, y: 24 },
-      sprite: { region: atlas.uiHeart, layer: Layers.ui, origin: { x: 0, y: 0 } },
+      sprite: sprite("uiHeart", Layers.ui, { x: 0, y: 0 }),
     });
     state.hudHeartIds.push(heartId);
   }
@@ -82,6 +84,7 @@ function spawnHudHearts(world: World, atlas: SpaceInvadersAtlas, state: SpaceInv
 export function createSpaceInvadersScene(engine: Engine, atlas: SpaceInvadersAtlas): SpaceInvadersSceneContext {
   const canvas = engine.graphics.viewport;
   const world = new World();
+  world.assets.add(SI_ATLAS, atlas);
   const state = createSpaceInvadersState();
 
   engine.input.bindAction("move_left", ["ArrowLeft", "KeyA"]);
@@ -97,17 +100,17 @@ export function createSpaceInvadersScene(engine: Engine, atlas: SpaceInvadersAtl
   const playerId = world.spawn({
     name: "Player",
     transform: { x: WORLD_W * 0.5, y: PLAYER_Y },
-    sprite: { region: atlas.player, layer: Layers.world },
+    sprite: sprite("player", Layers.world),
   });
 
-  spawnInvaders(world, atlas, state);
-  spawnHudHearts(world, atlas, state);
+  spawnInvaders(world, state);
+  spawnHudHearts(world, state);
 
   const hud = document.getElementById("hud");
 
-  world.addFixedSystem(new CombatSystem(playerId, state, atlas.enemyBullet));
-  world.addFixedSystem(new PlayerShipSystem(playerId, state, atlas.bullet));
-  world.addFixedSystem(new InvaderFormationSystem(state, atlas));
+  world.addFixedSystem(new CombatSystem(playerId, state));
+  world.addFixedSystem(new PlayerShipSystem(playerId, state));
+  world.addFixedSystem(new InvaderFormationSystem(state));
   world.addRenderSystem(new StarfieldRenderSystem(engine.graphics));
   world.addRenderSystem(new WorldEntityRenderSystem(engine.graphics));
   world.addRenderSystem(
@@ -123,24 +126,23 @@ export function createSpaceInvadersScene(engine: Engine, atlas: SpaceInvadersAtl
     }),
   );
 
-  window.__TE_SI__ = {
-    state,
-    playerX: () => world.get(playerId)?.transform.x ?? 0,
-  };
+  world.inspection.set("state", () => state);
+  world.inspection.set("playerX", () => world.get(playerId)?.transform.x ?? 0);
+  window.__TE__ = { snapshot: () => world.inspection.snapshot() };
 
   return { engine, world, atlas, state, playerId, worldCamera: worldCam, uiCamera: uiCam };
 }
 
 export function resetSpaceInvaders(scene: SpaceInvadersSceneContext): void {
-  const { world, atlas, state, playerId } = scene;
+  const { world, state, playerId } = scene;
   for (const id of state.invaderIds) world.remove(id);
   for (const id of state.hudHeartIds) world.remove(id);
   for (const id of state.enemyBulletIds) world.remove(id);
   if (state.playerBulletId !== null) world.remove(state.playerBulletId);
 
   Object.assign(state, createSpaceInvadersState());
-  spawnInvaders(world, atlas, state);
-  spawnHudHearts(world, atlas, state);
+  spawnInvaders(world, state);
+  spawnHudHearts(world, state);
 
   const player = world.get(playerId);
   if (player) {
@@ -157,7 +159,7 @@ export function bindSpaceInvadersLoop(scene: SpaceInvadersSceneContext): void {
       if ((scene.state.gameOver || scene.state.won) && ctx.input.actionPressed("fire")) {
         resetSpaceInvaders(scene);
       }
-      world.fixedUpdate({ ...ctx, physics: null });
+      world.fixedUpdate(ctx);
     },
     render: ({ graphics, input, width, height, alpha, dt, time, tick }) => {
       worldCamera.fitToRect(WORLD_W, WORLD_H, width, height, {
@@ -168,7 +170,7 @@ export function bindSpaceInvadersLoop(scene: SpaceInvadersSceneContext): void {
       uiCamera.y = height * 0.5;
 
       graphics.beginFrame(Color.hex("#0d1117"));
-      world.render({ dt, time, tick, input, physics: null, alpha, width, height });
+      world.render({ dt, time, tick, input, alpha, width, height });
       graphics.endFrame();
     },
   });

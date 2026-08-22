@@ -5,3 +5,5 @@ dist/
 test-results/
 blob-report/
 playwright-report/
+package-lock.json
+

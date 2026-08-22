@@ -1,0 +1,22 @@
+{
+  "name": "@teengine/editor",
+  "version": "0.4.0",
+  "description": "Minimal scene editor shell for TeEngine documents.",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@teengine/core": "workspace:*"
+  }
+}

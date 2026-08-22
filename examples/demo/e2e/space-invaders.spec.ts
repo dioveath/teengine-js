@@ -2,18 +2,11 @@ import { expect, test, type Page } from "@playwright/test";
 
 declare global {
   interface Window {
-    __TE_SI__?: {
-      state: {
-        score: number;
-        lives: number;
-        gameOver: boolean;
-        won: boolean;
-        playerBulletId: number | null;
-      };
-      playerX: () => number;
-    };
+    __TE__?: { snapshot: () => Record<string, unknown> };
   }
 }
+
+type SiState = { score: number; lives: number; gameOver: boolean };
 
 async function gotoPlayingOrSkip(page: Page): Promise<void> {
   await page.goto("/space-invaders.html");
@@ -28,7 +21,7 @@ async function gotoPlayingOrSkip(page: Page): Promise<void> {
 }
 
 test.describe("Space Invaders", () => {
-  test("boots with canvas, HUD, and debug hook", async ({ page }) => {
+  test("boots with canvas, HUD, and inspection", async ({ page }) => {
     await gotoPlayingOrSkip(page);
 
     const canvas = page.locator("#canvas");
@@ -47,19 +40,19 @@ test.describe("Space Invaders", () => {
     expect(size.width).toBeGreaterThan(1);
     expect(size.height).toBeGreaterThan(1);
 
-    const hook = await page.evaluate(() => window.__TE_SI__);
-    expect(hook).toBeDefined();
+    const snap = await page.evaluate(() => window.__TE__?.snapshot());
+    expect(snap?.state).toBeDefined();
   });
 
   test("ArrowLeft moves the player left", async ({ page }) => {
     await gotoPlayingOrSkip(page);
     await page.locator("#canvas").click();
 
-    const before = await page.evaluate(() => window.__TE_SI__!.playerX());
+    const before = await page.evaluate(() => window.__TE__!.snapshot().playerX as number);
     await page.keyboard.down("ArrowLeft");
     await page.waitForTimeout(400);
     await page.keyboard.up("ArrowLeft");
-    const after = await page.evaluate(() => window.__TE_SI__!.playerX());
+    const after = await page.evaluate(() => window.__TE__!.snapshot().playerX as number);
     expect(after).toBeLessThan(before);
   });
 
@@ -68,7 +61,10 @@ test.describe("Space Invaders", () => {
 
     await page.keyboard.down("Space");
     await expect
-      .poll(async () => page.evaluate(() => window.__TE_SI__!.state.score), { timeout: 12_000 })
+      .poll(async () => {
+        const state = (await page.evaluate(() => window.__TE__!.snapshot().state)) as SiState;
+        return state.score;
+      }, { timeout: 12_000 })
       .toBeGreaterThan(0);
     await page.keyboard.up("Space");
   });
@@ -77,7 +73,7 @@ test.describe("Space Invaders", () => {
     await gotoPlayingOrSkip(page);
 
     await page.evaluate(() => {
-      window.__TE_SI__!.state.gameOver = true;
+      (window.__TE__!.snapshot().state as SiState).gameOver = true;
     });
     await expect(page.locator("#hud")).toHaveAttribute("data-status", "Game over");
 

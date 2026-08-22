@@ -1,4 +1,4 @@
-import { Engine, PhysicsBridge, PhysicsWorld } from "teengine";
+import { createEngine, PhysicsBridge, PhysicsWorld } from "teengine";
 import { createPlatformerAtlas } from "./createPlatformerAtlas.js";
 import { bindPlatformerLoop, createPlatformerScene } from "./PlatformerScene.js";
 
@@ -31,10 +31,10 @@ async function main(): Promise<void> {
   const fallback = document.getElementById("fallback");
 
   try {
-    const engine = await Engine.create({ canvas });
+    const engine = await createEngine({ canvas });
     const physicsWorld = await PhysicsWorld.create({ gravityY: 980 });
     const physics = new PhysicsBridge(physicsWorld);
-    const atlas = createPlatformerAtlas(engine.device);
+    const atlas = createPlatformerAtlas(engine.graphics);
 
     const scene = createPlatformerScene(engine, physics, atlas);
     bindPlatformerLoop(scene);

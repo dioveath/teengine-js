@@ -19,7 +19,7 @@ import {
   type PlatformerPhysicsState,
 } from "./PlatformerPhysicsEventsSystem.js";
 import { PlayerControllerSystem } from "./PlayerControllerSystem.js";
-import type { PlatformerAtlas } from "./createPlatformerAtlas.js";
+import { PLATFORMER_ATLAS, type PlatformerAtlas } from "./createPlatformerAtlas.js";
 
 export const GROUND_Y = 300;
 export const PLAYER_SIZE = 28;
@@ -43,6 +43,7 @@ export function createPlatformerScene(
 ): PlatformerSceneContext {
   const canvas = engine.graphics.viewport;
   const world = new World(physics);
+  world.assets.add(PLATFORMER_ATLAS, atlas);
   const physicsState: PlatformerPhysicsState = { grounded: false };
 
   engine.input.bindAction("move_left", ["ArrowLeft", "KeyA"]);
@@ -79,7 +80,7 @@ export function createPlatformerScene(
   const playerId = world.spawn({
     name: "Player",
     transform: { x: 400, y: GROUND_Y - PLAYER_SIZE * 0.5 },
-    sprite: { region: atlas.player, layer: Layers.world },
+    sprite: { asset: PLATFORMER_ATLAS, region: "player", layer: Layers.world },
     collider: { shape: { kind: "box", width: PLAYER_SIZE, height: PLAYER_SIZE }, friction: 0.8, restitution: 0 },
     collision: {
       response: "solid",
@@ -96,7 +97,7 @@ export function createPlatformerScene(
   world.spawn({
     name: "Enemy",
     transform: { x: 520, y: GROUND_Y - 16 },
-    sprite: { region: atlas.enemy, layer: Layers.world },
+    sprite: { asset: PLATFORMER_ATLAS, region: "enemy", layer: Layers.world },
     collider: { shape: { kind: "box", width: 28, height: 28 } },
     collision: {
       response: "solid",
@@ -111,7 +112,7 @@ export function createPlatformerScene(
   const coinId = world.spawn({
     name: "Coin",
     transform: { x: 280, y: 260 },
-    sprite: { region: atlas.coin, layer: Layers.world },
+    sprite: { asset: PLATFORMER_ATLAS, region: "coin", layer: Layers.world },
     collider: { shape: { kind: "ball", radius: 12 } },
     collision: {
       response: "sensor",
@@ -123,13 +124,13 @@ export function createPlatformerScene(
   world.spawn({
     name: "Heart 1",
     transform: { x: 24, y: 24 },
-    sprite: { region: atlas.uiHeart, layer: Layers.ui, origin: { x: 0, y: 0 } },
+    sprite: { asset: PLATFORMER_ATLAS, region: "uiHeart", layer: Layers.ui, origin: { x: 0, y: 0 } },
   });
 
   world.spawn({
     name: "Heart 2",
     transform: { x: 60, y: 24 },
-    sprite: { region: atlas.uiHeart, layer: Layers.ui, origin: { x: 0, y: 0 } },
+    sprite: { asset: PLATFORMER_ATLAS, region: "uiHeart", layer: Layers.ui, origin: { x: 0, y: 0 } },
   });
 
   world.addFixedSystem(new PlayerControllerSystem(playerId, physicsState));
@@ -153,18 +154,18 @@ export function createPlatformerScene(
 }
 
 export function bindPlatformerLoop(scene: PlatformerSceneContext): void {
-  const { engine, world, physics, uiCamera } = scene;
+  const { engine, world, uiCamera } = scene;
 
   engine.setLoop({
     fixedUpdate: (ctx) => {
-      world.fixedUpdate({ ...ctx, physics });
+      world.fixedUpdate(ctx);
     },
     render: ({ graphics, input, width, height, alpha, dt, time, tick }) => {
       uiCamera.x = width * 0.5;
       uiCamera.y = height * 0.5;
 
       graphics.beginFrame(Color.hex("#0d1117"));
-      world.render({ dt, time, tick, input, physics, alpha, width, height });
+      world.render({ dt, time, tick, input, alpha, width, height });
       graphics.endFrame();
     },
   });

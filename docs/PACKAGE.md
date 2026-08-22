@@ -1,111 +1,17 @@
-# Package layout
+# Packages
 
-TeEngine is structured as an **npm workspace monorepo**: a publishable library plus runnable examples.
+Bun workspaces. Core is DOM/GPU/Rapier-free except `Input` (canvas events) and `Engine` (rAF).
 
-```
-teengine-js/
-├── packages/
-│   └── teengine/              # npm package — import as `teengine`
-│       ├── package.json
-│       ├── tsup.config.ts
-│       └── src/
-│           ├── index.ts       # public API surface
-│           ├── engine/        # game loop, fixed timestep
-│           ├── ecs/           # World, Entity, systems
-│           ├── graphics/      # cameras, layers, draw API
-│           ├── gpu/           # internal WebGPU (not exported)
-│           ├── input/
-│           ├── physics/
-│           ├── assets/        # Atlas types + JSON loader
-│           └── math/
-├── examples/
-│   └── demo/                  # Vite app — `npm run dev`
-│       └── src/
-│           ├── main.ts
-│           ├── DemoScene.ts
-│           └── createDemoAtlas.ts
-├── docs/
-├── legacy/
-└── package.json               # workspace root
-```
+| Package | Role |
+|---------|------|
+| `@teengine/core` | Document, ECS, loop, input, graphics API, headless renderer |
+| `@teengine/physics` | Rapier adapter |
+| `@teengine/renderer-webgpu` | GPU backend |
+| `@teengine/renderer-canvas2d` | 2D backend |
+| `@teengine/storage` | Project repository |
+| `@teengine/gen` | Generation contracts |
+| `@teengine/ai` | verify / apply / play-headless |
+| `@teengine/editor` | Scene list + play |
+| `teengine` | Barrel: core + physics + WebGPU `createEngine` |
 
-## Design principles
-
-See [MODULES.md](./MODULES.md) for the engine boundary.
-
-| Concern | Where it lives |
-|---------|----------------|
-| **Engine** | `packages/teengine` — run, draw, simulate, input |
-| **Reference implementations** | `examples/*` (player controller, pickup, scenes) — copy and adapt |
-| **Your game** | Your app — systems, content, feel |
-| **GPU internals** | `packages/teengine/src/gpu` — private, not exported |
-| **Editor / UI** | Out of scope — use your own UI framework |
-
-## Public API (`teengine`)
-
-Single entry point today:
-
-```ts
-import {
-  Engine,
-  World,
-  Graphics,
-  PhysicsBridge,
-  PhysicsWorld,
-  Layers,
-  loadAtlasFromJson,
-  SpinSystem,
-  CameraFollowSystem,
-  WorldEntityRenderSystem,
-} from "teengine";
-```
-
-Single entry point. No subpath exports unless the core API genuinely outgrows one bundle.
-
-## Consuming the package
-
-### In this repo (workspace)
-
-```json
-{
-  "dependencies": {
-    "teengine": "workspace:*"
-  }
-}
-```
-
-### Published (npm)
-
-```bash
-npm install teengine
-```
-
-Bundlers must handle Rapier's WASM (`@dimforge/rapier2d`). Vite example:
-
-```ts
-optimizeDeps: { exclude: ["@dimforge/rapier2d"] },
-assetsInclude: ["**/*.wasm"],
-```
-
-## Build
-
-```bash
-npm install
-npm run build          # builds packages/teengine → dist/
-npm run dev            # builds engine + runs examples/demo
-```
-
-## What not to put in the package
-
-- Demo scenes and game systems
-- Procedural demo assets (`createDemoAtlas`)
-- Editor UI
-- App entry points (`main.ts`, `index.html`)
-
-These belong in `examples/` or the consumer's app.
-
-## Versioning
-
-- `packages/teengine` is versioned and published
-- Root `teengine-js` stays `private: true`
-- Examples are never published
+`bun run check:independence` enforces the DAG.

@@ -1,5 +1,6 @@
-import type { AtlasRegion, EntityId, FixedSystem, FixedSystemContext, World } from "teengine";
+import type { EntityId, FixedSystem, FixedSystemContext, World } from "teengine";
 import { Layers } from "teengine";
+import { SI_ATLAS } from "./createSpaceInvadersAtlas.js";
 import {
   BULLET_H,
   BULLET_W,
@@ -16,6 +17,7 @@ import {
   WORLD_W,
   boxesOverlap,
   invaderPoints,
+  spriteSize,
   type SpaceInvadersState,
 } from "./spaceInvadersState.js";
 
@@ -25,7 +27,6 @@ export class CombatSystem implements FixedSystem {
   constructor(
     private readonly playerId: EntityId,
     private readonly state: SpaceInvadersState,
-    private readonly enemyBulletRegion: AtlasRegion,
   ) {}
 
   fixedUpdate(ctx: FixedSystemContext): void {
@@ -99,7 +100,7 @@ export class CombatSystem implements FixedSystem {
     const bulletId = world.spawn({
       name: "EnemyBullet",
       transform: { x: shooter.transform.x, y: shooter.transform.y + INVADER_H * 0.5 + BULLET_H * 0.5 },
-      sprite: { region: this.enemyBulletRegion, layer: Layers.world },
+      sprite: { asset: SI_ATLAS, region: "enemyBullet", layer: Layers.world },
     });
     this.state.enemyBulletIds.add(bulletId);
     this.state.enemyFireCooldown = 0.8 + Math.random() * 1.2;
@@ -115,16 +116,18 @@ export class CombatSystem implements FixedSystem {
         for (const invaderId of [...this.state.invaderIds]) {
           const invader = world.get(invaderId);
           if (!invader) continue;
+          const bulletSize = spriteSize(world, bullet, BULLET_W, BULLET_H);
+          const invaderSize = spriteSize(world, invader, INVADER_W, INVADER_H);
           if (
             boxesOverlap(
               bullet.transform.x,
               bullet.transform.y,
-              bullet.sprite?.region.width ?? BULLET_W,
-              bullet.sprite?.region.height ?? BULLET_H,
+              bulletSize.w,
+              bulletSize.h,
               invader.transform.x,
               invader.transform.y,
-              invader.sprite?.region.width ?? INVADER_W,
-              invader.sprite?.region.height ?? INVADER_H,
+              invaderSize.w,
+              invaderSize.h,
             )
           ) {
             const kind = this.state.invaderKinds.get(invaderId) ?? "B";
@@ -143,16 +146,18 @@ export class CombatSystem implements FixedSystem {
     for (const bulletId of [...this.state.enemyBulletIds]) {
       const bullet = world.get(bulletId);
       if (!bullet) continue;
+      const bulletSize = spriteSize(world, bullet, BULLET_W, BULLET_H);
+      const playerSize = spriteSize(world, player, PLAYER_W, PLAYER_H);
       if (
         boxesOverlap(
           bullet.transform.x,
           bullet.transform.y,
-          bullet.sprite?.region.width ?? BULLET_W,
-          bullet.sprite?.region.height ?? BULLET_H,
+          bulletSize.w,
+          bulletSize.h,
           player.transform.x,
           player.transform.y,
-          player.sprite?.region.width ?? PLAYER_W,
-          player.sprite?.region.height ?? PLAYER_H,
+          playerSize.w,
+          playerSize.h,
         )
       ) {
         world.remove(bulletId);
@@ -165,16 +170,18 @@ export class CombatSystem implements FixedSystem {
     for (const invaderId of this.state.invaderIds) {
       const invader = world.get(invaderId);
       if (!invader) continue;
+      const invaderSize = spriteSize(world, invader, INVADER_W, INVADER_H);
+      const playerSize = spriteSize(world, player, PLAYER_W, PLAYER_H);
       if (
         boxesOverlap(
           invader.transform.x,
           invader.transform.y,
-          invader.sprite?.region.width ?? INVADER_W,
-          invader.sprite?.region.height ?? INVADER_H,
+          invaderSize.w,
+          invaderSize.h,
           player.transform.x,
           player.transform.y,
-          player.sprite?.region.width ?? PLAYER_W,
-          player.sprite?.region.height ?? PLAYER_H,
+          playerSize.w,
+          playerSize.h,
         )
       ) {
         this.state.gameOver = true;

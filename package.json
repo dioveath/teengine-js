@@ -2,20 +2,28 @@
   "name": "teengine-js",
   "private": true,
   "type": "module",
-  "workspaces": [
-    "packages/*",
-    "examples/*"
-  ],
+  "packageManager": "bun@1.3.14",
+  "workspaces": ["packages/*", "apps/*", "examples/*"],
   "scripts": {
-    "build": "npm run build -w teengine",
-    "build:demo": "npm run build -w teengine && npm run build -w demo",
-    "dev": "npm run build -w teengine && npm run dev -w demo",
-    "typecheck": "npm run typecheck -w teengine && npm run typecheck -w demo",
-    "test": "npm run test -w teengine",
-    "test:e2e": "npm run build -w teengine && npm run test:e2e -w demo"
+    "build": "bun scripts/build.ts",
+    "build:demo": "bun run build && bun run --filter demo build",
+    "dev": "bun run build && bun run --filter demo dev",
+    "dev:studio": "bun run build && bun run --filter studio dev",
+    "typecheck": "bun scripts/typecheck.ts",
+    "test": "bun run --filter @teengine/core test && bun run --filter @teengine/physics test",
+    "test:e2e": "bun run build && bun run --filter demo test:e2e",
+    "check:independence": "bun scripts/check-independence.mjs"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^22.15.0",
     "@webgpu/types": "^0.1.60",
-    "typescript": "^5.8.3"
+    "happy-dom": "^17.4.4",
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5",
+    "vite-plugin-top-level-await": "^1.6.0",
+    "vite-plugin-wasm": "^3.6.0",
+    "vitest": "^3.2.4"
   }
 }

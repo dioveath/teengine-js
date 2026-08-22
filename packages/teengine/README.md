@@ -1,13 +1,11 @@
 # teengine
 
-2D TypeScript game engine — WebGPU rendering, systems ECS, Rapier physics.
-
-```bash
-npm install teengine
-```
+Convenience barrel: `@teengine/core` + Rapier physics + WebGPU renderer.
 
 ```ts
-import { Engine, World, PhysicsBridge, PhysicsWorld, Layers, Color } from "teengine";
+import { createEngine, World, Layers, Color } from "teengine";
+
+const engine = await createEngine({ canvas });
 ```
 
-See the [repository](https://github.com/dioveath/teengine-js) for docs and examples.
+Use `@teengine/core` alone when you inject a renderer and skip physics.
